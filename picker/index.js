@@ -1,6 +1,6 @@
 // @ts-check
 
-import { Picker } from "./picker.js";
+import { Picker } from "./picker2.js";
 
 export default class App {
   /**

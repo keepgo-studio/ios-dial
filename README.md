@@ -4,7 +4,9 @@
 
 2. endless style 구현
 
-3. npm 배포
+3. scroll event 구현
+
+4. npm 배포
 
 ## user parameters
 
@@ -61,8 +63,8 @@ new App().config("web-picker", { flag: false });
 
 ```html
 <ios-ui-picker
-  width
-  height
+  width="600px"
+  height="400px"
   num-list="10"
   title-list="hour"
   picker-type="end"
