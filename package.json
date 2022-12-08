@@ -1,0 +1,20 @@
+{
+  "name": "iou-ui",
+  "version": "1.0.0",
+  "description": "ios ui style web component js module",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keepgo-studio/ios-ui.git"
+  },
+  "keywords": [
+    "javascript",
+    "ios"
+  ],
+  "author": "keepgo.studio",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/keepgo-studio/ios-ui/issues"
+  },
+  "homepage": "https://github.com/keepgo-studio/ios-ui#readme"
+}
