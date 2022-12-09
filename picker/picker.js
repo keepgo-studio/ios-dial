@@ -53,12 +53,13 @@ const styles = `
     align-items: center;
     justify-content: center;
     position: relative;
-
     top: 0;
     width: 1em;
     height: 100%;
     transform-style: preserve-3d;
     transition: ease 300ms box-shadow;
+
+    overflow-y: hidden;
   }
   .picker:focus {
     box-shadow: inset 0px 0px 0px 2px #e3e3e3;
@@ -76,11 +77,13 @@ const styles = `
   .num-list {
     cursor: pointer;
     height: 100%;
-    overflow-y: scroll;
-    overflow-x: hidden;
+    /*overflow-y: scroll;
+    overflow-x: hidden;*/
     padding:0 0.5em;
     -ms-overflow-style: none;  /* Internet Explorer 10+ */
     scrollbar-width: none;  /* Firefox */
+
+    position: relative;
   }
   .num-list::-webkit-scrollbar { 
     display: none;  /* Safari and Chrome */
@@ -359,7 +362,16 @@ export class Picker extends HTMLElement {
       }
     }
 
-    pickerElem.querySelector(".num-list")?.scroll(0, coor.y);
+    /**
+     * Since picker should fix his position, numbers will be
+     *  moved by transforming ul tag which is the parent of numbers
+     * see {@link render}
+     * <div>
+     *
+     * </div>
+     */
+    // @ts-ignore
+    pickerElem.querySelector(".num-list").style.top = `${-coor.y}px`;
 
     [...pickerElem.querySelectorAll("li.num")].forEach((numElem, numIdx) => {
       this.drawNum(numElem, pickerIdx, numIdx);
@@ -439,6 +451,7 @@ export class Picker extends HTMLElement {
   isPickerLocateAtIdealDest() {
     return this.pickerCoor.every((coor) => coor.y === coor.idealDest);
   }
+
 
   animation() {
     requestAnimationFrame(this.animation.bind(this));
@@ -599,6 +612,8 @@ export class Picker extends HTMLElement {
     this.elems["picker-container"].style.fontSize = `${fontSize}px`;
   }
 
+  BOUNCE_LENGHT = 0;
+
   syncCoor() {
     // prettier-ignore
     this.pickerContainerCoor = this.elems["picker-container"]
@@ -627,13 +642,15 @@ export class Picker extends HTMLElement {
         numGap = numsFromPicker[1].offsetTop - numsFromPicker[0].offsetTop;
       }
 
+      const numsLength = numsFromPicker.length;
+
       this.pickerCoor.push({
         y: 0,
         dest: 0,
         upperBound: 0,
         // @ts-ignore
-        lowerBound: numsFromPicker[numsFromPicker.length - 1].offsetTop,
-        idealDest: 0,
+        lowerBound: this.numCoorPerPicker[pickerIdx][numsLength - 1].top,
+        idealDest: this.numCoorPerPicker[pickerIdx][0].top,
         numGap,
       });
     });
@@ -726,14 +743,14 @@ export class Picker extends HTMLElement {
    * @param {'add' | 'sub'} method
    */
   addDistanceForDestination(pickerIdx, dis, method) {
-    // BOUNCE_LENGTH = this.elems["picker-container"].offsetHeight / 6;
+    const BOUNCE_LENGTH = this.elems["picker-container"].offsetHeight / 3;
 
     switch (method) {
       // go down ↓
       case "add":
         if (
           this.pickerCoor[pickerIdx].dest + dis >
-          this.pickerCoor[pickerIdx].lowerBound
+          this.pickerCoor[pickerIdx].lowerBound + BOUNCE_LENGTH
         ) {
           this.pickerCoor[pickerIdx].dest =
             this.pickerCoor[pickerIdx].lowerBound;
@@ -745,7 +762,7 @@ export class Picker extends HTMLElement {
       case "sub":
         if (
           this.pickerCoor[pickerIdx].dest - dis <
-          this.pickerCoor[pickerIdx].upperBound
+          this.pickerCoor[pickerIdx].upperBound - BOUNCE_LENGTH
         ) {
           this.pickerCoor[pickerIdx].dest =
             this.pickerCoor[pickerIdx].upperBound;
@@ -871,8 +888,6 @@ export class Picker extends HTMLElement {
     },
   };
 
-
-
   /**
    * @param {WheelEvent} e
    * @param {number} pickerIdx
@@ -882,7 +897,7 @@ export class Picker extends HTMLElement {
       pickerIdx,
       Math.abs(e.deltaY),
       e.deltaY > 0 ? "add" : "sub"
-    )
+    );
   }
 
   attachWheelEventListenerForPicker() {

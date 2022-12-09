@@ -6,11 +6,13 @@
 
 3. scroll event 구현 (O)
 
-4. giving opportunity nameing for the event to user
+4. giving opportunity nameing for the event to user (O)
 
 5. keydown event 구현 (O)
 
-6. npm 배포
+6. bouncing animation (O)
+
+7. npm 배포
 
 ## user parameters
 
