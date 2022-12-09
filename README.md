@@ -6,23 +6,47 @@
 
 3. scroll event 구현 (O)
 
-4. npm 배포
+4. giving opportunity nameing for the event to user
+
+5. keydown event 구현 (O)
+
+6. npm 배포
 
 ## user parameters
 
-- width='100%'
+### width
 
-- height='100%'
+* example : ```width='100%'```
 
-- num-list="24,60,60"
+### height
 
-- title-list="시간,분,초"
+* example : ```height='100%'```
 
-- picker-type="end"
+### num-list
 
-- flexible="true"
+* example : ```num-list="24,60,60"```
 
-- allow-key-event="false"
+### title-list
+
+* example : ```title-list="시간,분,초"```
+
+### picker-type
+
+* example : ```picker-type="end"```
+
+### flexible
+
+* example : ```flexible="true"```
+
+### allow-key-event
+
+* example : ```allow-key-event="false"```
+
+### event-name
+
+* example : ```event-name```
+
+## caution
 
 * all parameters should typed with string since this module created pure html and javscript.
 
@@ -71,4 +95,22 @@ new App().config("web-picker", { flag: false });
   flexible="true"
   allow-key-event="false"
 ></ios-ui-picker>
+```
+
+## attributes examples
+
+1. [event-name](#event-name)
+
+```html
+<ios-ui-picker
+  event-name="getnumber"
+></ios-ui-picker>
+```
+
+```js
+  /**
+   * @param {CustomEvent<Array<number>>} e
+   */
+  element.addEventListener('setnumber', ({detail}) => console.log(detail));
+  // if num-list length is 3 -> [0, 0, 0]
 ```

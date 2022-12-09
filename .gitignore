@@ -1,3 +1,5 @@
 *.html
 
 .vscode
+
+test.js
