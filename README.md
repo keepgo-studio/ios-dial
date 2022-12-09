@@ -4,7 +4,7 @@
 
 2. endless style 구현
 
-3. scroll event 구현
+3. scroll event 구현 (O)
 
 4. npm 배포
 

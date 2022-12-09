@@ -2,19 +2,27 @@
 import { IPHONE_PPI_WIDTH, MAX_FONT_SIZE } from "./ios.js";
 import { range } from "./utils.js";
 
-const errorHTML = `
-  <div style="background-color: #000; text-align: center">
+/**
+ * @param {string} err 
+ * @returns {string} html
+ */
+const errorHTML = (err) => `
+  <div style="
+    background-color: #000;
+    text-align: center;
+    color: #fff; 
+    font-weight: 100; 
+    padding: 2rem;
+    ">
     <h1 style="
       display:inline-block;
-      color: #fff; 
-      font-weight: 100; 
-      padding: 2rem;
+      max-width: 400px;
       line-height: 1.6em;
       letter-spacing: -0.03em;
-      max-width: 400px;
       ">
       <b>Oops!😢</b> you insert some attributes incorrectly
     </h1>
+    <p style='color:red'>${err}</p>
   </div>
 `;
 
@@ -84,9 +92,9 @@ const styles = `
     height: calc(50% - .5em);
   }
   .picker .title {
-    font-size: 0.6em;
+    transform: translateX(-.7em);
+    font-size: 0.55em;
     
-    margin-left: 0.2em;
     word-break: keep-all;
   }
   .num-list {
@@ -94,6 +102,7 @@ const styles = `
     height: 100%;
     overflow-y: scroll;
     overflow-x: hidden;
+    padding:0 0.5em;
     -ms-overflow-style: none;  /* Internet Explorer 10+ */
     scrollbar-width: none;  /* Firefox */
   }
@@ -232,6 +241,10 @@ export class Picker extends HTMLElement {
    */
   animFloat = 0.1;
 
+  /**
+   * 
+   * @returns {{ canRun: boolean, msg?: string }}
+   */
   syncAttributes() {
     const userWidth = this.getAttribute("width");
     const userHeight = this.getAttribute("height");
@@ -300,7 +313,7 @@ export class Picker extends HTMLElement {
         this.userSettings["num-list"].length <
         this.userSettings["title-list"].length
       ) {
-        throw new Error("titles cannot be exist more than numbers");
+        throw new Error("titles cannot be more exists than numbers");
       } else {
         while (
           this.userSettings["num-list"].length >
@@ -310,12 +323,10 @@ export class Picker extends HTMLElement {
         }
       }
     } catch (error) {
-      console.error(error);
-
-      return false;
+      return {canRun: false, msg: error};
     }
 
-    return true;
+    return { canRun: true};
   }
 
   /**
@@ -485,12 +496,12 @@ export class Picker extends HTMLElement {
     this.attachShadow({ mode: "open" });
 
     // 2. sync attributes from user's inputs
-    const shouldStartPicker = this.syncAttributes();
+    const { canRun, msg } = this.syncAttributes();
 
     // 3. start animation
-    if (shouldStartPicker) requestAnimationFrame(this.animation.bind(this));
+    if (canRun) requestAnimationFrame(this.animation.bind(this));
     // @ts-ignore
-    else this.render = () => (this.shadowRoot.innerHTML = errorHTML);
+    else this.render = () => (this.shadowRoot.innerHTML = errorHTML(msg));
   }
 
   render() {
@@ -620,7 +631,7 @@ export class Picker extends HTMLElement {
         dest: 0,
         upperBound: 0,
         // @ts-ignore
-        lowerBound: -numsFromPicker[numsFromPicker.length - 1].offsetTop,
+        lowerBound: numsFromPicker[numsFromPicker.length - 1].offsetTop,
         idealDest: 0,
         numGap,
       });
@@ -714,27 +725,29 @@ export class Picker extends HTMLElement {
    * @param {'add' | 'sub'} method
    */
   addDistanceForDestination(pickerIdx, dis, method) {
-    const maxDis = this.elems["picker-container"].offsetHeight / 6;
+    // const maxDis = this.elems["picker-container"].offsetHeight / 6;
 
     switch (method) {
+      // go down ↓
       case "add":
         if (
           this.pickerCoor[pickerIdx].dest + dis >
-          this.pickerCoor[pickerIdx].upperBound + maxDis
+          this.pickerCoor[pickerIdx].lowerBound
         ) {
           this.pickerCoor[pickerIdx].dest =
-            this.pickerCoor[pickerIdx].upperBound + maxDis;
+            this.pickerCoor[pickerIdx].lowerBound;
         } else {
           this.pickerCoor[pickerIdx].dest += dis;
         }
         break;
+      // go up ↑
       case "sub":
         if (
           this.pickerCoor[pickerIdx].dest - dis <
-          this.pickerCoor[pickerIdx].lowerBound - maxDis
+          this.pickerCoor[pickerIdx].upperBound
         ) {
           this.pickerCoor[pickerIdx].dest =
-            this.pickerCoor[pickerIdx].lowerBound - maxDis;
+            this.pickerCoor[pickerIdx].upperBound;
         } else {
           this.pickerCoor[pickerIdx].dest -= dis;
         }
@@ -830,15 +843,15 @@ export class Picker extends HTMLElement {
 
       const dir = e.y - this.mouseCoor.y;
 
-      let dis = Math.abs(e.y - this.mouseCoor.y);
+      let dis = Math.abs(e.y - this.mouseCoor.y) * 4;
 
       /**
        * when user scroll rapidly, the picker will move to pickers' bound ASAP
        */
-      if (dis > window.innerWidth / 4) {
-        dis = -this.pickerCoor[this.mouseCoor.pressedPickerIdx].lowerBound;
-      } else if (dis > window.innerWidth / 6) {
-        dis = -this.pickerCoor[this.mouseCoor.pressedPickerIdx].lowerBound / 2;
+      if (dis > window.innerWidth / 3) {
+        dis = this.pickerCoor[this.mouseCoor.pressedPickerIdx].lowerBound;
+      } else if (dis > window.innerWidth / 2) {
+        dis = this.pickerCoor[this.mouseCoor.pressedPickerIdx].lowerBound / 2;
       }
 
       if (dir > 0) {
@@ -890,13 +903,14 @@ export class Picker extends HTMLElement {
    */
   scrollListener(pickerIdx, numListElem) {
     if (!this.mouseCoor.isScrolling) {
-      this.pickerCoor[pickerIdx].dest = numListElem.scrollTop;
-
+    
       requestAnimationFrame(() => {
+        this.drawPicker(this.elems["all-picker"][pickerIdx], pickerIdx)
         this.mouseCoor.isScrolling = false;
       })
     }
-
+    
+    this.pickerCoor[pickerIdx].dest = numListElem.scrollTop;
     this.mouseCoor.isScrolling= true;
   }
 
