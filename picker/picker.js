@@ -461,7 +461,7 @@ export class Picker extends HTMLElement {
     this.elems["all-picker"].forEach((pickerElem, pickerIdx) => {
       const coor = this.pickerCoor[pickerIdx];
 
-      if (!this.main.animating) this.setIdealDestWhenStop(coor, pickerIdx);
+      if (!this.main.animating && this.mouseCoor.pressedPickerIdx === -1) this.setIdealDestWhenStop(coor, pickerIdx);
 
       this.drawPicker(pickerElem, pickerIdx);
     });
@@ -505,21 +505,7 @@ export class Picker extends HTMLElement {
   render() {
     if (!this.shadowRoot) return;
 
-    const spaceOrPicker = (/** @type {number} */ pickerIdx) =>
-      this.userSettings["picker-type"] === "end"
-        ? `<div class="space"></div>`
-        : `<ul class="num-list idx-${pickerIdx} endless">
-          ${range(this.userSettings["num-list"][pickerIdx])
-            .map(
-              (numIdx) => `
-            <li 
-              class="num idx-${pickerIdx}-${numIdx}"
-              ><span>${numIdx}</span>
-            </li>
-          `
-            )
-            .join("")}
-          </ul>`;
+    const spaceOrNot = this.userSettings["picker-type"] === 'end' ? `<div class="space"></div>`: '';
 
     const pickersHTML = `
         ${range(this.main.cnt)
@@ -528,7 +514,7 @@ export class Picker extends HTMLElement {
             <div class="picker" tabIndex=0>
 
               <ul class="num-list idx-${pickerIdx}">
-                ${spaceOrPicker(pickerIdx)}
+                ${spaceOrNot}
                 ${range(this.userSettings["num-list"][pickerIdx])
                   .map(
                     (numIdx) => `
@@ -539,7 +525,7 @@ export class Picker extends HTMLElement {
                 `
                   )
                   .join("")}
-                ${spaceOrPicker(pickerIdx)}
+                ${spaceOrNot}
               </ul>
 
               ${
@@ -619,7 +605,8 @@ export class Picker extends HTMLElement {
     this.pickerContainerCoor = this.elems["picker-container"]
       .getBoundingClientRect();
 
-    const spaceElem = this.elems.root.querySelector(".space");
+    // @ts-ignore
+    const spaceHeight = this.elems.root.querySelector(".space").offsetHeight;
 
     this.numCoorPerPicker = [];
 
@@ -632,11 +619,12 @@ export class Picker extends HTMLElement {
         this.numCoorPerPicker[pickerIdx].push({
           isEntered: false,
           // @ts-ignore
-          top: numElem.offsetTop - spaceElem.offsetHeight,
+          top: numElem.offsetTop - spaceHeight,
         });
       });
 
       let numGap = 0;
+      
       if (numsFromPicker.length > 1) {
         // @ts-ignore
         numGap = numsFromPicker[1].offsetTop - numsFromPicker[0].offsetTop;
