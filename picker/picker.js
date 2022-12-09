@@ -68,7 +68,7 @@ const styles = `
     height: calc(50% - .5em);
   }
   .picker .title {
-    transform: translateX(-.7em);
+    transform: translateX(-.4em);
     font-size: 0.55em;
     
     word-break: keep-all;
@@ -140,7 +140,7 @@ export class Picker extends HTMLElement {
     acc: 0.18,
     "allow-key-event": false,
     sound: true,
-    'event-name': 'setnumber'
+    "event-name": "setnumber",
   };
 
   /**
@@ -183,16 +183,11 @@ export class Picker extends HTMLElement {
   pickerContainerCoor;
 
   /**
-   * @typedef {"UP" | "DOWN"} MouseDirection
-   * @typedef {"idle" | "MOUSE" | "WHEEL" | "KEY"} EventType
-   */
-  /**
-   * @type {{ mousedownY: number, pressedPickerIdx: number, currentEvent: EventType}}
+   * @type {{ mousedownY: number, pressedPickerIdx: number}}
    */
   mouseCoor = {
-    mousedownY: 0,
+    mousedownY: -1,
     pressedPickerIdx: -1,
-    currentEvent: "idle"
   };
 
   /**
@@ -206,7 +201,7 @@ export class Picker extends HTMLElement {
     shouldFireResult: false,
     result: [],
     bounceLength: 0,
-    animating: false
+    animating: false,
   };
 
   /**
@@ -217,7 +212,7 @@ export class Picker extends HTMLElement {
   animFloat = 0.1;
 
   /**
-   * 
+   *
    * @returns {{ canRun: boolean, msg?: string }}
    */
   syncAttributes() {
@@ -230,7 +225,7 @@ export class Picker extends HTMLElement {
     const userPickerType = this.getAttribute("picker-type");
     const userAllowKeyEvent = this.getAttribute("allow-key-event");
     const userSound = this.getAttribute("sound");
-    const userEventName = this.getAttribute('event-name');
+    const userEventName = this.getAttribute("event-name");
 
     try {
       if (userWidth) {
@@ -303,10 +298,10 @@ export class Picker extends HTMLElement {
         }
       }
     } catch (error) {
-      return {canRun: false, msg: error};
+      return { canRun: false, msg: error };
     }
 
-    return { canRun: true};
+    return { canRun: true };
   }
 
   /**
@@ -364,10 +359,7 @@ export class Picker extends HTMLElement {
       }
     }
 
-    // console.log(coor.y, coor.dest, coor.idealDest)
-    // if (this.mouseCoor.currentEvent !== "WHEEL") {
     pickerElem.querySelector(".num-list")?.scroll(0, coor.y);
-    // }
 
     [...pickerElem.querySelectorAll("li.num")].forEach((numElem, numIdx) => {
       this.drawNum(numElem, pickerIdx, numIdx);
@@ -445,15 +437,13 @@ export class Picker extends HTMLElement {
     }
   }
   isPickerLocateAtIdealDest() {
-    return this.pickerCoor.every((coor) => coor.y === coor.idealDest)
+    return this.pickerCoor.every((coor) => coor.y === coor.idealDest);
   }
 
   animation() {
     requestAnimationFrame(this.animation.bind(this));
 
-    this.isDrawingStop()
-    
-    if (this.mouseCoor.currentEvent === 'MOUSE') return;
+    this.isDrawingStop();
 
     this.elems["all-picker"].forEach((pickerElem, pickerIdx) => {
       const coor = this.pickerCoor[pickerIdx];
@@ -468,7 +458,11 @@ export class Picker extends HTMLElement {
       return;
     }
 
-    if (!this.main.animating && this.isPickerLocateAtIdealDest() && !this.main.shouldFireResult) {
+    if (
+      !this.main.animating &&
+      this.isPickerLocateAtIdealDest() &&
+      !this.main.shouldFireResult
+    ) {
       this.dispatchEvent(
         new CustomEvent(this.userSettings["event-name"], {
           detail: this.main.result,
@@ -498,14 +492,30 @@ export class Picker extends HTMLElement {
   render() {
     if (!this.shadowRoot) return;
 
+    const spaceOrPicker = (/** @type {number} */ pickerIdx) =>
+      this.userSettings["picker-type"] === "end"
+        ? `<div class="space"></div>`
+        : `<ul class="num-list idx-${pickerIdx} endless">
+          ${range(this.userSettings["num-list"][pickerIdx])
+            .map(
+              (numIdx) => `
+            <li 
+              class="num idx-${pickerIdx}-${numIdx}"
+              ><span>${numIdx}</span>
+            </li>
+          `
+            )
+            .join("")}
+          </ul>`;
+
     const pickersHTML = `
         ${range(this.main.cnt)
           .map(
             (pickerIdx) => `
             <div class="picker" tabIndex=0>
-            
+
               <ul class="num-list idx-${pickerIdx}">
-                <div class="space"></div>
+                ${spaceOrPicker(pickerIdx)}
                 ${range(this.userSettings["num-list"][pickerIdx])
                   .map(
                     (numIdx) => `
@@ -516,7 +526,7 @@ export class Picker extends HTMLElement {
                 `
                   )
                   .join("")}
-                <div class="space"></div>
+                ${spaceOrPicker(pickerIdx)}
               </ul>
 
               ${
@@ -744,9 +754,7 @@ export class Picker extends HTMLElement {
         }
         break;
     }
-
   }
-
 
   focusedPickerIdx = -1;
 
@@ -771,21 +779,9 @@ export class Picker extends HTMLElement {
       const gap = this.pickerCoor[this.focusedPickerIdx].numGap;
 
       if (e.code === "ArrowUp") {
-        this.addDistanceForDestination(
-          this.focusedPickerIdx,
-          gap,
-          "sub"
-        );
-
-        this.mouseCoor.currentEvent = 'KEY'
+        this.addDistanceForDestination(this.focusedPickerIdx, gap, "sub");
       } else if (e.code === "ArrowDown") {
-        this.addDistanceForDestination(
-          this.focusedPickerIdx,
-          gap,
-          "add"
-        );
-
-        this.mouseCoor.currentEvent = 'KEY'
+        this.addDistanceForDestination(this.focusedPickerIdx, gap, "add");
       } else if (e.code === "ArrowLeft") {
         if (this.focusedPickerIdx > 0) {
           this.elems["all-picker"][this.focusedPickerIdx - 1].focus();
@@ -800,7 +796,7 @@ export class Picker extends HTMLElement {
         }
       }
     },
-    keyup: () => this.mouseCoor.currentEvent = 'idle',
+    keyup: () => {},
   };
 
   /**
@@ -836,27 +832,17 @@ export class Picker extends HTMLElement {
       const pickerIdx = parseInt(info[1]);
 
       this.mouseCoor.mousedownY = e.y;
-      this.mouseCoor.currentEvent = "MOUSE";
       this.mouseCoor.pressedPickerIdx = pickerIdx;
     },
     /**
      * @param {MouseEvent} e
      */
     mousemove: (e) => {
-      if (this.mouseCoor.currentEvent !== "MOUSE") return;
+      if (this.mouseCoor.mousedownY === -1) return;
 
       const dir = e.y - this.mouseCoor.mousedownY;
 
       let dis = Math.abs(e.y - this.mouseCoor.mousedownY);
-
-      /**
-       * when user scroll rapidly, the picker will move to pickers' bound ASAP
-       */
-      // if (dis > window.innerWidth / 3) {
-      //   dis = this.pickerCoor[this.mouseCoor.pressedPickerIdx].lowerBound;
-      // } else if (dis > window.innerWidth / 2) {
-      //   dis = this.pickerCoor[this.mouseCoor.pressedPickerIdx].lowerBound / 2;
-      // }
 
       if (dir > 0) {
         // down
@@ -874,76 +860,58 @@ export class Picker extends HTMLElement {
         );
       }
       this.mouseCoor.mousedownY = e.y;
-
-      this.drawPicker(
-        this.elems["all-picker"][this.mouseCoor.pressedPickerIdx],
-        this.mouseCoor.pressedPickerIdx
-      );
     },
-    /**
-     * @param {MouseEvent} e
-     */
-    mouseup: (e) => {
-      this.mouseCoor.currentEvent = 'idle';
+    mouseup: () => {
       this.mouseCoor.pressedPickerIdx = -1;
+      this.mouseCoor.mousedownY = -1;
     },
     // if mouse leave window, isPressed should set to be false
     mouseleave: () => {
-      this.mouseCoor.currentEvent = 'idle';
+      this.mouseCoor.mousedownY = -1;
     },
   };
 
-  syncSettingsDependsOnResize() {
+
+
+  /**
+   * @param {WheelEvent} e
+   * @param {number} pickerIdx
+   */
+  wheelListener(e, pickerIdx) {
+    this.addDistanceForDestination(
+      pickerIdx,
+      Math.abs(e.deltaY),
+      e.deltaY > 0 ? "add" : "sub"
+    )
+  }
+
+  attachWheelEventListenerForPicker() {
+    this.elems["all-picker"].forEach((pickerElem, pickerIdx) => {
+      const numListElem = pickerElem.querySelector(".num-list");
+
+      numListElem?.addEventListener(
+        "wheel",
+        // @ts-ignore
+        (e) => this.wheelListener(e, pickerIdx),
+        false
+      );
+    });
+  }
+
+  syncWhenResizeEnd() {
     this.setStyles();
     this.syncCoor();
     this.setObservers();
 
     this.isResizing = false;
   }
-  
-  ticking = false;
-  /**
-   * @param {number} pickerIdx
-   * @param {HTMLElement} numListElem
-   */
-  scrollListener(pickerIdx, numListElem) {
-    if (!this.ticking) {
-      if (this.mouseCoor.currentEvent === 'WHEEL') {
-        this.pickerCoor[pickerIdx].dest = numListElem.scrollTop;
-      }
-
-      requestAnimationFrame(() => {
-        this.drawPicker(this.elems["all-picker"][pickerIdx], pickerIdx)
-        this.ticking = false;
-        this.currentEventRef = 'idle';
-      })
-    }
-
-    this.ticking= true;
-    if (this.mouseCoor.currentEvent === 'idle') {
-      this.mouseCoor.currentEvent = 'WHEEL';
-    }
-  }
-
-  attachScrollEventListenerForPicker() {
-    this.elems["all-picker"].forEach((pickerElem, pickerIdx) => {
-      const numListElem = pickerElem.querySelector(".num-list");
-
-      numListElem?.addEventListener(
-        "scroll",
-        this.scrollListener.bind(this, pickerIdx, numListElem),
-        false
-      );
-    });
-  }
-  
-  stId = -1;
+  resizeStId = -1;
   isResizing = false;
 
   async resizeListener() {
     this.isResizing = true;
-    clearTimeout(this.stId);
-    this.stId = setTimeout(this.syncSettingsDependsOnResize.bind(this), 100);
+    clearTimeout(this.resizeStId);
+    this.resizeStId = setTimeout(this.syncWhenResizeEnd.bind(this), 100);
   }
 
   connectedCallback() {
@@ -951,9 +919,9 @@ export class Picker extends HTMLElement {
 
     this.syncElements();
 
-    this.syncSettingsDependsOnResize();
+    this.syncWhenResizeEnd();
 
-    this.attachScrollEventListenerForPicker();
+    this.attachWheelEventListenerForPicker();
 
     // mouse events for window
     Object.keys(this.mouseListener).forEach((event) => {
@@ -978,7 +946,7 @@ export class Picker extends HTMLElement {
      * disable darg and if some picker had focused, will be disappear if user click other area
      */
     this.elems.root.onmousedown = () => {
-      this.elems["all-picker"].forEach(e => e.blur());
+      this.elems["all-picker"].forEach((e) => e.blur());
 
       return false;
     };
