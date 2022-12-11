@@ -2,6 +2,9 @@
 
 import { Picker } from "./picker.js";
 
+/**
+ * @method config
+ */
 export default class App {
   /**
    * @param {string} tagName 

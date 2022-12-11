@@ -58,14 +58,16 @@ const styles = `
     height: 100%;
     transform-style: preserve-3d;
     transition: ease 300ms box-shadow;
-
-    overflow-y: hidden;
+    overflow: hidden;
   }
   .picker:focus {
     box-shadow: inset 0px 0px 0px 2px #e3e3e3;
     outline: none;
   }
-  .picker .space {
+  .space {
+    position: absolute;
+    top: 0;
+    left: 0;
     height: calc(50% - .5em);
   }
   .picker .title {
@@ -77,16 +79,8 @@ const styles = `
   .num-list {
     cursor: pointer;
     height: 100%;
-    /*overflow-y: scroll;
-    overflow-x: hidden;*/
     padding:0 0.5em;
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;  /* Firefox */
-
     position: relative;
-  }
-  .num-list::-webkit-scrollbar { 
-    display: none;  /* Safari and Chrome */
   }
   .num-list li {
     width: 1em;
@@ -147,7 +141,16 @@ export class Picker extends HTMLElement {
   };
 
   /**
-   * @type {{"root": HTMLElement, "picker-container": HTMLElement, center: HTMLElement, "all-nums": Array<HTMLElement>, "all-picker": Array<HTMLElement>}}
+   * @typedef {Object} ElementList
+   * @property {HTMLElement} root
+   * @property {HTMLElement} pickerContainer
+   * @property {HTMLElement} center
+   * @property {HTMLElement} space
+   * @property {Array<HTMLElement>} allPickers
+   * @property {Array<HTMLElement>} allLi
+   */
+  /**
+   * @type {ElementList}
    */
   // @ts-ignore
   elems = {};
@@ -163,7 +166,7 @@ export class Picker extends HTMLElement {
    * @description the array initialize at {@link syncCoor}
    *  ,and {@link Info} data will be changed at ${@link setObservers}
    */
-  numCoorPerPicker = [];
+  allNumsCoorPerPicker = [];
 
   /**
    * @typedef {Object} CoorInfo
@@ -306,26 +309,6 @@ export class Picker extends HTMLElement {
 
     return { canRun: true };
   }
-
-  /**
-   *
-   * @param {CoorInfo} coor
-   * @param {number} pickerIdx
-   */
-  setIdealDestWhenStop(coor, pickerIdx) {
-    if (this.main.animating) return;
-
-    /**
-     * set number's postions to ideal location,
-     * the ideal position set from {@link setObservers}
-     */
-    if (
-      coor.y === coor.dest &&
-      this.pickerCoor[pickerIdx].idealDest !== coor.dest
-    ) {
-      coor.dest = this.pickerCoor[pickerIdx].idealDest;
-    }
-  }
   /**
    *
    * @param {Element} pickerElem
@@ -373,7 +356,15 @@ export class Picker extends HTMLElement {
     // @ts-ignore
     pickerElem.querySelector(".num-list").style.top = `${-coor.y}px`;
 
-    [...pickerElem.querySelectorAll("li.num")].forEach((numElem, numIdx) => {
+    /**
+     * not just nums because if user want to use 'endless' style, then
+     *  the picker will have li childs which are have class name 'num' or
+     *  'num-clone'
+     *
+     * For that reason, selector should be li, not li.num
+     */
+
+    [...pickerElem.querySelectorAll("li")].forEach((numElem, numIdx) => {
       this.drawNum(numElem, pickerIdx, numIdx);
     });
   }
@@ -385,7 +376,8 @@ export class Picker extends HTMLElement {
    */
   drawNum(numElem, pickerIdx, numIdx) {
     const span = numElem.children[0];
-    if (this.numCoorPerPicker[pickerIdx][numIdx].isEntered) {
+
+    if (this.allNumsCoorPerPicker[pickerIdx][numIdx].isEntered) {
       // @ts-ignore
       span.style.display = "block";
 
@@ -403,18 +395,18 @@ export class Picker extends HTMLElement {
       const numTopFromCenter = numCoor.top + numCoor.height / 2;
       const percentage =
         (numTopFromCenter - this.pickerContainerCoor.top) /
-        this.elems["picker-container"].offsetHeight;
+        this.elems.pickerContainer.offsetHeight;
 
       /**
        * 8 is important constant
        */
-      const zConstant = this.elems["picker-container"].offsetHeight / 7;
+      const zConstant = this.elems.pickerContainer.offsetHeight / 7;
       const Zpx = zConstant * ((percentage - 0.5) / 0.5);
 
       let Xdeg = 0;
       let opacity = 1;
 
-      const centerIdx = this.elems["all-picker"].length / 2;
+      const centerIdx = this.elems.allPickers.length / 2;
 
       let Ydeg = 7 * (centerIdx - pickerIdx) * ((percentage - 0.5) / 0.5);
 
@@ -448,20 +440,41 @@ export class Picker extends HTMLElement {
       this.main.animating = true;
     }
   }
+  /**
+   *
+   * @param {CoorInfo} coor
+   * @param {number} pickerIdx
+   */
+  setIdealDestWhenStop(coor, pickerIdx) {
+    if (this.main.animating) return;
+
+    /**
+     * set number's postions to ideal location,
+     * the ideal position set from {@link setObservers}
+     */
+    if (
+      coor.y === coor.dest &&
+      this.pickerCoor[pickerIdx].idealDest !== coor.dest
+    ) {
+      coor.dest = this.pickerCoor[pickerIdx].idealDest;
+    }
+  }
   isPickerLocateAtIdealDest() {
     return this.pickerCoor.every((coor) => coor.y === coor.idealDest);
   }
-
 
   animation() {
     requestAnimationFrame(this.animation.bind(this));
 
     this.isDrawingStop();
 
-    this.elems["all-picker"].forEach((pickerElem, pickerIdx) => {
+    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
       const coor = this.pickerCoor[pickerIdx];
 
-      if (!this.main.animating && this.mouseCoor.pressedPickerIdx === -1) this.setIdealDestWhenStop(coor, pickerIdx);
+      // if mousedown maintating, the picker won't go back to ideal automatically
+      if (!this.main.animating && this.mouseCoor.pressedPickerIdx === -1) {
+        this.setIdealDestWhenStop(coor, pickerIdx);
+      }
 
       this.drawPicker(pickerElem, pickerIdx);
     });
@@ -505,51 +518,69 @@ export class Picker extends HTMLElement {
   render() {
     if (!this.shadowRoot) return;
 
-    const spaceOrNot = this.userSettings["picker-type"] === 'end' ? `<div class="space"></div>`: '';
-
-    const pickersHTML = `
-        ${range(this.main.cnt)
-          .map(
-            (pickerIdx) => `
-            <div class="picker" tabIndex=0>
-
-              <ul class="num-list idx-${pickerIdx}">
-                ${spaceOrNot}
-                ${range(this.userSettings["num-list"][pickerIdx])
-                  .map(
-                    (numIdx) => `
-                  <li 
-                    class="num idx-${pickerIdx}-${numIdx}"
-                    ><span>${numIdx}</span>
-                  </li>
-                `
-                  )
-                  .join("")}
-                ${spaceOrNot}
-              </ul>
-
-              ${
-                this.userSettings["title-list"].length > 0
-                  ? `<div class="title">
-                      ${this.userSettings["title-list"][pickerIdx]}
-                    </div>`
-                  : ""
-              }
-
-            </div>
-          `
-          )
-          .join("")}`;
+    /**
+     * @param {number} pickerIdx
+     * @param {number} baseNumIdx
+     * @returns {string}
+     */
+    const cloneNodesHTML = (pickerIdx, baseNumIdx) =>
+      this.userSettings["picker-type"] === "end"
+        ? ""
+        : range(this.userSettings["num-list"][pickerIdx])
+            .map(
+              (numIdx) =>
+                `<li class="num-clone idx-${pickerIdx}-${baseNumIdx + numIdx}">
+                  <span>${numIdx}</span>
+                </li>`
+            )
+            .join("");
 
     this.shadowRoot.innerHTML = `
       <style>${styles}</style>
 
       <section id="root">
         <div class="picker-container">
-          
-          <div class="center"></div>
+          <div class="space"></div>
 
-          ${pickersHTML}
+          <div class="center"></div>
+          ${range(this.main.cnt)
+            .map(
+              (pickerIdx) => `
+              <div class="picker" tabIndex=0>
+
+                <ul class="num-list idx-${pickerIdx}">
+                  ${cloneNodesHTML(pickerIdx, 0)}
+
+                  ${range(this.userSettings["num-list"][pickerIdx])
+                    .map(
+                      (numIdx) => `
+                    <li class="num idx-${pickerIdx}-${
+                        (this.userSettings["picker-type"] === "end"
+                          ? 0
+                          : this.userSettings["num-list"][pickerIdx] 
+                        ) + numIdx
+                      }"><span>${numIdx}</span>
+                    </li>
+                  `
+                    )
+                    .join("")}
+
+                  ${cloneNodesHTML(pickerIdx, this.userSettings["num-list"][pickerIdx] * 2)}
+                </ul>
+  
+                ${
+                  this.userSettings["title-list"].length > 0
+                    ? `<div class="title">
+                        ${this.userSettings["title-list"][pickerIdx]}
+                      </div>`
+                    : ""
+                }
+  
+              </div>
+            `
+            )
+            .join("")}
+
         </div>
       </section>
     `;
@@ -560,20 +591,23 @@ export class Picker extends HTMLElement {
     this.elems.root = this.shadowRoot?.getElementById("root");
 
     // @ts-ignore
-    this.elems["picker-container"] =
+    this.elems.pickerContainer =
       this.shadowRoot?.querySelector(".picker-container");
 
     // @ts-ignore
     this.elems.center = this.shadowRoot?.querySelector(".center");
 
-    this.elems["all-picker"] = [
+    // @ts-ignore
+    this.elems.space = this.shadowRoot?.querySelector(".space");
+
+    this.elems.allPickers = [
       // @ts-ignore
       ...this.shadowRoot?.querySelectorAll(".picker"),
     ];
 
-    this.elems["all-nums"] = [
+    this.elems.allLi = [
       // @ts-ignore
-      ...this.shadowRoot?.querySelectorAll(".num-list .num"),
+      ...this.shadowRoot?.querySelectorAll(".num-list li"),
     ];
   }
 
@@ -581,10 +615,10 @@ export class Picker extends HTMLElement {
    * set static styles
    */
   setStyles() {
-    this.elems["root"].style.width = this.userSettings.width;
-    this.elems["root"].style.height = this.userSettings.height;
+    this.elems.root.style.width = this.userSettings.width;
+    this.elems.root.style.height = this.userSettings.height;
 
-    const rootWidth = this.elems["root"].offsetWidth;
+    const rootWidth = this.elems.root.offsetWidth;
     /**
      * How to calculate font size
      *
@@ -595,50 +629,73 @@ export class Picker extends HTMLElement {
 
     fontSize = fontSize > MAX_FONT_SIZE ? MAX_FONT_SIZE : fontSize;
 
-    this.elems["picker-container"].style.fontSize = `${fontSize}px`;
+    this.elems.pickerContainer.style.fontSize = `${fontSize}px`;
   }
 
   BOUNCE_LENGHT = 0;
 
   syncCoor() {
+    this.pickerCoor = [];
+    this.allNumsCoorPerPicker = [];
+
     // prettier-ignore
-    this.pickerContainerCoor = this.elems["picker-container"]
+    this.pickerContainerCoor = this.elems.pickerContainer
       .getBoundingClientRect();
 
     // @ts-ignore
-    const spaceHeight = this.elems.root.querySelector(".space").offsetHeight;
+    const spaceHeight = this.elems.space.offsetHeight;
 
-    this.numCoorPerPicker = [];
+    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+      this.allNumsCoorPerPicker.push([]);
 
-    this.elems["all-picker"].forEach((pickerElem, pickerIdx) => {
-      this.numCoorPerPicker.push([]);
+      // if picker-type === 'endless', the list contains 'num-clone' class
+      const liFromPicker = [...pickerElem.querySelectorAll("li")];
 
-      const numsFromPicker = [...pickerElem.querySelectorAll("li.num")];
-
-      numsFromPicker.forEach((numElem) => {
-        this.numCoorPerPicker[pickerIdx].push({
+      liFromPicker.forEach((numElem) => {
+        this.allNumsCoorPerPicker[pickerIdx].push({
           isEntered: false,
           // @ts-ignore
-          top: numElem.offsetTop - spaceHeight,
+          top: numElem.offsetTop,
         });
       });
 
       let numGap = 0;
-      
-      if (numsFromPicker.length > 1) {
+
+      if (liFromPicker.length > 1) {
         // @ts-ignore
-        numGap = numsFromPicker[1].offsetTop - numsFromPicker[0].offsetTop;
+        numGap =
+          this.allNumsCoorPerPicker[pickerIdx][1].top -
+          this.allNumsCoorPerPicker[pickerIdx][0].top;
       }
 
-      const numsLength = numsFromPicker.length;
+      const numsLength = liFromPicker.length;
+
+      let initY = 0;
+      let lowerBound = 0;
+
+      switch (this.userSettings["picker-type"]) {
+        case "end":
+          initY = this.allNumsCoorPerPicker[pickerIdx][0].top - spaceHeight;
+          lowerBound = this.allNumsCoorPerPicker[pickerIdx][numsLength - 1].top;
+          break;
+        case "endless":
+          const numsFromPicker = [...pickerElem.querySelectorAll("li.num")];
+
+          // @ts-ignore
+          initY = numsFromPicker[0].offsetTop - spaceHeight;
+
+          // @ts-ignore
+          lowerBound = numsFromPicker[numsFromPicker.length - 1].offsetTop;
+          break;
+      }
 
       this.pickerCoor.push({
-        y: 0,
-        dest: 0,
-        upperBound: 0,
+        y: initY,
+        dest: initY,
+        upperBound: initY,
         // @ts-ignore
-        lowerBound: this.numCoorPerPicker[pickerIdx][numsLength - 1].top,
-        idealDest: this.numCoorPerPicker[pickerIdx][0].top,
+        lowerBound,
+        idealDest: initY,
         numGap,
       });
     });
@@ -648,11 +705,18 @@ export class Picker extends HTMLElement {
   /**
    * @type {Array<IntersectionObserver>}
    */
-  ioForSetDest = [];
+  ioForSetIdealDest = [];
+
+  /**
+   * @type {Array<IntersectionObserver>}
+   * @description using only for **endless** picker style
+   */
+  ioScrollSwitcherPerPicker = [];
 
   setObservers() {
     this.ioForCurvingNums.disconnect();
-    this.ioForSetDest.forEach((io) => io.disconnect());
+    this.ioForSetIdealDest.forEach((io) => io.disconnect());
+    this.ioScrollSwitcherPerPicker.forEach((io) => io.disconnect());
 
     this.ioForCurvingNums = new IntersectionObserver(
       (entries) =>
@@ -663,30 +727,36 @@ export class Picker extends HTMLElement {
           // @ts-ignore
           const numIdx = parseInt(data[2]);
 
+          const numCoor = this.allNumsCoorPerPicker[pickerIdx][numIdx];
+
           if (entry.isIntersecting) {
-            this.numCoorPerPicker[pickerIdx][numIdx].isEntered = true;
+            numCoor.isEntered = true;
           } else {
-            this.numCoorPerPicker[pickerIdx][numIdx].isEntered = false;
+            numCoor.isEntered = false;
           }
         }),
       {
         threshold: 0.1,
-        root: this.elems["picker-container"],
+        root: this.elems.pickerContainer,
       }
     );
 
-    this.elems["all-nums"].forEach((elem) =>
-      this.ioForCurvingNums.observe(elem)
-    );
+    this.elems.allLi.forEach((elem) => this.ioForCurvingNums.observe(elem));
+
+    console.log(this.allNumsCoorPerPicker)
 
     /**
      * Since center is **absolute positioned element**, its offsetTop is not accurate
      */
     const centerOffsetTop =
       this.elems.center.offsetTop - this.elems.center.offsetHeight / 2;
+
     // @ts-ignore
-    this.elems["all-picker"].forEach((pickerElem, pickerIdx) => {
-      this.ioForSetDest.push(
+    const spaceHeight = this.elems.space?.offsetHeight;
+
+    // @ts-ignore
+    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+      this.ioForSetIdealDest.push(
         new IntersectionObserver(
           (entries) =>
             entries.forEach((entry) => {
@@ -697,10 +767,14 @@ export class Picker extends HTMLElement {
                 // @ts-ignore
                 const numIdx = parseInt(data[2]);
 
-                this.pickerCoor[pickerIdx].idealDest =
-                  this.numCoorPerPicker[pickerIdx][numIdx].top;
+                const len = this.userSettings["num-list"][pickerIdx];
 
-                this.main.result[pickerIdx] = numIdx;
+                this.pickerCoor[pickerIdx].idealDest =
+                  this.allNumsCoorPerPicker[pickerIdx][numIdx].top -
+                  spaceHeight;
+                
+
+                this.main.result[pickerIdx] = numIdx % len;
 
                 try {
                   if (this.userSettings.sound) {
@@ -720,9 +794,59 @@ export class Picker extends HTMLElement {
       );
 
       pickerElem
-        .querySelectorAll("li.num")
-        .forEach((e) => this.ioForSetDest[pickerIdx].observe(e));
+        .querySelectorAll("li")
+        .forEach((e) => this.ioForSetIdealDest[pickerIdx].observe(e));
     });
+
+    if (this.userSettings["picker-type"] === "endless") {
+      this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+        /**
+         * @description see {@link render}, then you can find numIdx will be third times larger
+         * if user want to use 'endless' style
+         */
+        const len = this.userSettings["num-list"][pickerIdx];
+        const numsFromPicker = pickerElem.querySelectorAll("li.num");
+
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              // @ts-ignore
+              const info = entry.target.classList.item(1).split("-");
+
+              const num = parseInt(info[2]);
+
+              const coor = this.pickerCoor[pickerIdx];
+
+              if (!entry.isIntersecting) {
+                switch (num - len) {
+                  case 0:
+                    if (coor.y <= coor.upperBound + coor.numGap * 2) {
+                      coor.dest = coor.lowerBound - spaceHeight * 2
+                      coor.y = coor.dest + coor.numGap / 3;
+                    }
+                    break;
+                  case len - 1:
+                    if (coor.y >= coor.lowerBound - coor.numGap * 1.5) {
+                      coor.dest = coor.upperBound + spaceHeight / 2 + coor.numGap * 2;
+                      coor.y = coor.dest - 10;
+                    }
+                    break;
+                }
+              }
+            });
+          },
+          {
+            root: this.elems.pickerContainer,
+            threshold: 0.1,
+          }
+        );
+
+        io.observe(numsFromPicker[0]);
+        io.observe(numsFromPicker[len - 1]);
+
+        this.ioScrollSwitcherPerPicker.push(io);
+      });
+    }
   }
 
   /**
@@ -731,34 +855,36 @@ export class Picker extends HTMLElement {
    * @param {'add' | 'sub'} method
    */
   addDistanceForDestination(pickerIdx, dis, method) {
-    const BOUNCE_LENGTH = this.elems["picker-container"].offsetHeight / 3;
+    const BOUNCE_LENGTH = this.elems.pickerContainer.offsetHeight / 3;
 
+    const coor = this.pickerCoor[pickerIdx];
+
+    const spaceHeight = this.elems.space.offsetHeight;
     switch (method) {
       // go down ↓
       case "add":
         if (
-          this.pickerCoor[pickerIdx].dest + dis >
-          this.pickerCoor[pickerIdx].lowerBound + BOUNCE_LENGTH
+          this.userSettings["picker-type"] === "end" &&
+          (coor.dest + dis > coor.lowerBound - spaceHeight + BOUNCE_LENGTH)
         ) {
-          this.pickerCoor[pickerIdx].dest =
-            this.pickerCoor[pickerIdx].lowerBound;
+          coor.dest = coor.lowerBound - spaceHeight + BOUNCE_LENGTH;
         } else {
-          this.pickerCoor[pickerIdx].dest += dis;
+          coor.dest += dis;
         }
         break;
       // go up ↑
       case "sub":
         if (
-          this.pickerCoor[pickerIdx].dest - dis <
-          this.pickerCoor[pickerIdx].upperBound - BOUNCE_LENGTH
+          this.userSettings["picker-type"] === "end" &&
+          (coor.dest - dis < coor.upperBound - BOUNCE_LENGTH)
         ) {
-          this.pickerCoor[pickerIdx].dest =
-            this.pickerCoor[pickerIdx].upperBound;
+          coor.dest = coor.upperBound - BOUNCE_LENGTH;
         } else {
-          this.pickerCoor[pickerIdx].dest -= dis;
+          coor.dest -= dis;
         }
         break;
     }
+    // @ts-ignore
   }
 
   focusedPickerIdx = -1;
@@ -773,10 +899,10 @@ export class Picker extends HTMLElement {
           case "ArrowUp":
           case "ArrowDown":
           case "ArrowLeft":
-            this.elems["all-picker"][this.main.cnt - 1].focus();
+            this.elems.allPickers[this.main.cnt - 1].focus();
             break;
           case "ArrowRight":
-            this.elems["all-picker"][0].focus();
+            this.elems.allPickers[0].focus();
         }
         return;
       }
@@ -789,15 +915,15 @@ export class Picker extends HTMLElement {
         this.addDistanceForDestination(this.focusedPickerIdx, gap, "add");
       } else if (e.code === "ArrowLeft") {
         if (this.focusedPickerIdx > 0) {
-          this.elems["all-picker"][this.focusedPickerIdx - 1].focus();
+          this.elems.allPickers[this.focusedPickerIdx - 1].focus();
         } else {
-          this.elems["all-picker"][this.focusedPickerIdx].blur();
+          this.elems.allPickers[this.focusedPickerIdx].blur();
         }
       } else if (e.code === "ArrowRight") {
         if (this.focusedPickerIdx < this.main.cnt - 1) {
-          this.elems["all-picker"][this.focusedPickerIdx + 1].focus();
+          this.elems.allPickers[this.focusedPickerIdx + 1].focus();
         } else {
-          this.elems["all-picker"][this.focusedPickerIdx].blur();
+          this.elems.allPickers[this.focusedPickerIdx].blur();
         }
       }
     },
@@ -808,7 +934,7 @@ export class Picker extends HTMLElement {
    * this listener is for key board event, check {@link keyListener}
    */
   attachFocusEventListenerForPicker() {
-    this.elems["all-picker"].forEach((pickerElem, pickerIdx) => {
+    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
       pickerElem.addEventListener("focusin", () => {
         this.focusedPickerIdx = pickerIdx;
       });
@@ -849,7 +975,7 @@ export class Picker extends HTMLElement {
 
       let dis = Math.abs(e.y - this.mouseCoor.mousedownY);
 
-      if (dir > 0) {
+      if (dir < 0) {
         // down
         this.addDistanceForDestination(
           this.mouseCoor.pressedPickerIdx,
@@ -889,10 +1015,8 @@ export class Picker extends HTMLElement {
   }
 
   attachWheelEventListenerForPicker() {
-    this.elems["all-picker"].forEach((pickerElem, pickerIdx) => {
-      const numListElem = pickerElem.querySelector(".num-list");
-
-      numListElem?.addEventListener(
+    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+      pickerElem.addEventListener(
         "wheel",
         // @ts-ignore
         (e) => this.wheelListener(e, pickerIdx),
@@ -901,7 +1025,7 @@ export class Picker extends HTMLElement {
     });
   }
 
-  syncWhenResizeEnd() {
+  syncDynamicSettings() {
     this.setStyles();
     this.syncCoor();
     this.setObservers();
@@ -914,7 +1038,7 @@ export class Picker extends HTMLElement {
   async resizeListener() {
     this.isResizing = true;
     clearTimeout(this.resizeStId);
-    this.resizeStId = setTimeout(this.syncWhenResizeEnd.bind(this), 100);
+    this.resizeStId = setTimeout(this.syncDynamicSettings.bind(this), 100);
   }
 
   connectedCallback() {
@@ -922,7 +1046,7 @@ export class Picker extends HTMLElement {
 
     this.syncElements();
 
-    this.syncWhenResizeEnd();
+    this.syncDynamicSettings();
 
     this.attachWheelEventListenerForPicker();
 
@@ -949,7 +1073,7 @@ export class Picker extends HTMLElement {
      * disable darg and if some picker had focused, will be disappear if user click other area
      */
     this.elems.root.onmousedown = () => {
-      this.elems["all-picker"].forEach((e) => e.blur());
+      this.elems.allPickers.forEach((e) => e.blur());
 
       return false;
     };
