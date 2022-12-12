@@ -117,7 +117,7 @@ export class Picker extends HTMLElement {
    * @property {string} height
    * @property {Array<number>} num-list
    * @property {Array<string>} title-list
-   * @property {"end" | "endless"} picker-type
+   * @property {Array<"end" | "endless">} picker-type-list
    * @property {boolean} flexible
    * @property {number} acc
    * @property {boolean} allow-key-event
@@ -132,7 +132,7 @@ export class Picker extends HTMLElement {
     height: "100%",
     "num-list": [10],
     "title-list": [],
-    "picker-type": "end",
+    "picker-type-list": ["end"],
     flexible: false,
     acc: 0.18,
     "allow-key-event": false,
@@ -199,7 +199,7 @@ export class Picker extends HTMLElement {
   /**
    * @type {{cnt:number, shouldFireResult: boolean, result: Array<number>, bounceLength: number, animating: boolean}}
    * @description you can find codes for 'hasFiredResult' only in {@link animation}
-   *  ,and you can find assigning value cods for 'result' at {@link setObservers} and
+   *  ,and you can find assigning value cods for '{@link main.result}' at {@link setObservers} and
    *  can find initializing codes at {@link syncAttributes}
    */
   main = {
@@ -228,7 +228,7 @@ export class Picker extends HTMLElement {
     const userNumList = this.getAttribute("num-list");
     const userTitleList = this.getAttribute("title-list");
     const userFlexible = this.getAttribute("flexible");
-    const userPickerType = this.getAttribute("picker-type");
+    const userPickerType = this.getAttribute("picker-type-list");
     const userAllowKeyEvent = this.getAttribute("allow-key-event");
     const userSound = this.getAttribute("sound");
     const userEventName = this.getAttribute("event-name");
@@ -265,7 +265,9 @@ export class Picker extends HTMLElement {
       }
 
       if (userTitleList) {
-        this.userSettings["title-list"] = userTitleList.split(",");
+        this.userSettings["title-list"] = userTitleList
+          .split(",")
+          .map((v) => v.trim());
       }
 
       if (userFlexible) {
@@ -273,9 +275,38 @@ export class Picker extends HTMLElement {
       }
 
       if (userPickerType) {
-        if (userPickerType === "end" || userPickerType === "endless") {
-          this.userSettings["picker-type"] = userPickerType;
-        } else throw new Error("unvalid picker type");
+        /**
+         * @param {string} v 
+         * @returns {boolean}
+         */
+        const checkValid = (v) => v === "end" || v === "endless";
+
+        const typeList = userPickerType.split(",");
+
+        // @ts-ignore
+        this.userSettings["picker-type-list"] = typeList.map((type) => {
+          type = type.trim();
+
+          if (!checkValid(type)) {
+            throw new Error(
+              'unvalid picker type. (e.g picker-type="end,endless,endless")'
+            );
+          }
+
+          return type;
+        });
+
+        if (this.userSettings["picker-type-list"].length === 1) {
+          const unified = this.userSettings["picker-type-list"][0];
+
+          this.userSettings["picker-type-list"] = this.userSettings["num-list"].map(() => unified)
+        } else if (this.userSettings["picker-type-list"].length < this.userSettings["num-list"].length) {
+          throw new Error(
+            `picker-type-list lenght should correspond with num-list or just only one value\n
+            (e.g picker-type-list=\"end,end,end\" | picker-type-list=\"end\")
+            `
+          );
+        }
       }
 
       if (userAllowKeyEvent) {
@@ -395,12 +426,12 @@ export class Picker extends HTMLElement {
       const numTopFromCenter = numCoor.top + numCoor.height / 2;
       const percentage =
         (numTopFromCenter - this.pickerContainerCoor.top) /
-        this.elems.pickerContainer.offsetHeight;
+        this.elems.root.offsetHeight;
 
       /**
        * 8 is important constant
        */
-      const zConstant = this.elems.pickerContainer.offsetHeight / 7;
+      const zConstant = this.elems.root.offsetHeight / 7;
       const Zpx = zConstant * ((percentage - 0.5) / 0.5);
 
       let Xdeg = 0;
@@ -524,7 +555,7 @@ export class Picker extends HTMLElement {
      * @returns {string}
      */
     const cloneNodesHTML = (pickerIdx, baseNumIdx) =>
-      this.userSettings["picker-type"] === "end"
+      this.userSettings["picker-type-list"][pickerIdx] === "end"
         ? ""
         : range(this.userSettings["num-list"][pickerIdx])
             .map(
@@ -555,17 +586,20 @@ export class Picker extends HTMLElement {
                     .map(
                       (numIdx) => `
                     <li class="num idx-${pickerIdx}-${
-                        (this.userSettings["picker-type"] === "end"
+                        (this.userSettings["picker-type-list"][pickerIdx] ===
+                        "end"
                           ? 0
-                          : this.userSettings["num-list"][pickerIdx] 
-                        ) + numIdx
+                          : this.userSettings["num-list"][pickerIdx]) + numIdx
                       }"><span>${numIdx}</span>
                     </li>
                   `
                     )
                     .join("")}
 
-                  ${cloneNodesHTML(pickerIdx, this.userSettings["num-list"][pickerIdx] * 2)}
+                  ${cloneNodesHTML(
+                    pickerIdx,
+                    this.userSettings["num-list"][pickerIdx] * 2
+                  )}
                 </ul>
   
                 ${
@@ -673,7 +707,7 @@ export class Picker extends HTMLElement {
       let initY = 0;
       let lowerBound = 0;
 
-      switch (this.userSettings["picker-type"]) {
+      switch (this.userSettings["picker-type-list"][pickerIdx]) {
         case "end":
           initY = this.allNumsCoorPerPicker[pickerIdx][0].top - spaceHeight;
           lowerBound = this.allNumsCoorPerPicker[pickerIdx][numsLength - 1].top;
@@ -737,13 +771,11 @@ export class Picker extends HTMLElement {
         }),
       {
         threshold: 0.1,
-        root: this.elems.pickerContainer,
+        root: this.elems.root,
       }
     );
 
     this.elems.allLi.forEach((elem) => this.ioForCurvingNums.observe(elem));
-
-    console.log(this.allNumsCoorPerPicker)
 
     /**
      * Since center is **absolute positioned element**, its offsetTop is not accurate
@@ -772,7 +804,6 @@ export class Picker extends HTMLElement {
                 this.pickerCoor[pickerIdx].idealDest =
                   this.allNumsCoorPerPicker[pickerIdx][numIdx].top -
                   spaceHeight;
-                
 
                 this.main.result[pickerIdx] = numIdx % len;
 
@@ -798,55 +829,60 @@ export class Picker extends HTMLElement {
         .forEach((e) => this.ioForSetIdealDest[pickerIdx].observe(e));
     });
 
-    if (this.userSettings["picker-type"] === "endless") {
-      this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
-        /**
-         * @description see {@link render}, then you can find numIdx will be third times larger
-         * if user want to use 'endless' style
-         */
-        const len = this.userSettings["num-list"][pickerIdx];
-        const numsFromPicker = pickerElem.querySelectorAll("li.num");
+    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+      if (this.userSettings["picker-type-list"][pickerIdx] === "end") return;
 
-        const io = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              // @ts-ignore
-              const info = entry.target.classList.item(1).split("-");
+      const spaceHeight = this.elems.space.offsetHeight;
+      const rootHeight = this.elems.root.offsetHeight;
+      /**
+       * @description see {@link render}, then you can find numIdx will be third times larger
+       * if user want to use 'endless' style
+       */
+      const len = this.userSettings["num-list"][pickerIdx];
+      const numsFromPicker = pickerElem.querySelectorAll("li.num");
 
-              const num = parseInt(info[2]);
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            // @ts-ignore
+            const info = entry.target.classList.item(1).split("-");
 
-              const coor = this.pickerCoor[pickerIdx];
+            const num = parseInt(info[2]);
 
-              if (!entry.isIntersecting) {
-                switch (num - len) {
-                  case 0:
-                    if (coor.y <= coor.upperBound + coor.numGap * 2) {
-                      coor.dest = coor.lowerBound - spaceHeight * 2
-                      coor.y = coor.dest + coor.numGap / 3;
-                    }
-                    break;
-                  case len - 1:
-                    if (coor.y >= coor.lowerBound - coor.numGap * 1.5) {
-                      coor.dest = coor.upperBound + spaceHeight / 2 + coor.numGap * 2;
-                      coor.y = coor.dest - 10;
-                    }
-                    break;
-                }
+            const coor = this.pickerCoor[pickerIdx];
+
+            if (!entry.isIntersecting) {
+              switch (num - len) {
+                case 0:
+                  if (
+                    coor.y <
+                    coor.upperBound - spaceHeight + coor.numGap * 1.5
+                  ) {
+                    coor.dest = coor.lowerBound - rootHeight + coor.numGap;
+                    coor.y = coor.dest + coor.numGap / 2;
+                  }
+                  break;
+                case len - 1:
+                  if (coor.y > coor.lowerBound - coor.numGap * 1.5) {
+                    coor.dest = coor.upperBound + spaceHeight;
+                    coor.y = coor.dest - coor.numGap;
+                  }
+                  break;
               }
-            });
-          },
-          {
-            root: this.elems.pickerContainer,
-            threshold: 0.1,
-          }
-        );
+            }
+          });
+        },
+        {
+          root: this.elems.pickerContainer,
+          threshold: 1,
+        }
+      );
 
-        io.observe(numsFromPicker[0]);
-        io.observe(numsFromPicker[len - 1]);
+      io.observe(numsFromPicker[0]);
+      io.observe(numsFromPicker[len - 1]);
 
-        this.ioScrollSwitcherPerPicker.push(io);
-      });
-    }
+      this.ioScrollSwitcherPerPicker.push(io);
+    });
   }
 
   /**
@@ -855,7 +891,7 @@ export class Picker extends HTMLElement {
    * @param {'add' | 'sub'} method
    */
   addDistanceForDestination(pickerIdx, dis, method) {
-    const BOUNCE_LENGTH = this.elems.pickerContainer.offsetHeight / 3;
+    const BOUNCE_LENGTH = this.elems.root.offsetHeight / 3;
 
     const coor = this.pickerCoor[pickerIdx];
 
@@ -864,8 +900,8 @@ export class Picker extends HTMLElement {
       // go down ↓
       case "add":
         if (
-          this.userSettings["picker-type"] === "end" &&
-          (coor.dest + dis > coor.lowerBound - spaceHeight + BOUNCE_LENGTH)
+          this.userSettings["picker-type-list"][pickerIdx] === "end" &&
+          coor.dest + dis > coor.lowerBound - spaceHeight + BOUNCE_LENGTH
         ) {
           coor.dest = coor.lowerBound - spaceHeight + BOUNCE_LENGTH;
         } else {
@@ -875,8 +911,8 @@ export class Picker extends HTMLElement {
       // go up ↑
       case "sub":
         if (
-          this.userSettings["picker-type"] === "end" &&
-          (coor.dest - dis < coor.upperBound - BOUNCE_LENGTH)
+          this.userSettings["picker-type-list"][pickerIdx] === "end" &&
+          coor.dest - dis < coor.upperBound - BOUNCE_LENGTH
         ) {
           coor.dest = coor.upperBound - BOUNCE_LENGTH;
         } else {
@@ -884,7 +920,6 @@ export class Picker extends HTMLElement {
         }
         break;
     }
-    // @ts-ignore
   }
 
   focusedPickerIdx = -1;
@@ -1005,22 +1040,25 @@ export class Picker extends HTMLElement {
   /**
    * @param {WheelEvent} e
    * @param {number} pickerIdx
+   * @param {number} dis
    */
-  wheelListener(e, pickerIdx) {
+  wheelListener(e, pickerIdx, dis) {
     this.addDistanceForDestination(
       pickerIdx,
-      Math.abs(e.deltaY),
+      dis,
       e.deltaY > 0 ? "add" : "sub"
     );
   }
 
   attachWheelEventListenerForPicker() {
     this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+      const numGap = this.pickerCoor[pickerIdx].numGap;
+
       pickerElem.addEventListener(
         "wheel",
         // @ts-ignore
-        (e) => this.wheelListener(e, pickerIdx),
-        false
+        (e) => this.wheelListener(e, pickerIdx, numGap),
+        { passive: false }
       );
     });
   }
