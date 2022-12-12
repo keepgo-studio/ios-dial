@@ -14,39 +14,54 @@
 
 7. npm 배포
 
-## user parameters
 
-### width
+## Usage
 
-* example : ```width='100%'```
+### npm
 
-### height
+```shell
+  $ npm i ios-ui
+```
 
-* example : ```height='100%'```
+### cdn
 
-### num-list
+```html
+  <script src="https://unpkg.com/iou-ui">
 
-* example : ```num-list="24,60,60"```
+  <!-- if you only want to get one ui component -->
 
-### title-list
+  <script src="https://unpkg.com/iou-ui/dist/picker.production.min.js">
+```
 
-* example : ```title-list="시간,분,초"```
+# Ui types
 
-### picker-type
+## Picker
 
-* example : ```picker-type="end"```
+### user parameters
 
-### flexible
+- width
+  * example : ```width='100%'```
 
-* example : ```flexible="true"```
+- height
+  * example : ```height='100%'```
 
-### allow-key-event
+- num-list
+  * example : ```num-list="24,60,60"```
 
-* example : ```allow-key-event="false"```
+- title-list
+  * example : ```title-list="시간,분,초"```
 
-### event-name
+- picker-type
+  * example : ```picker-type="end"```
 
-* example : ```event-name```
+- flexible
+  * example : ```flexible="true"```
+
+- allow-key-event
+  * example : ```allow-key-event="false"```
+
+- event-name
+  * example : ```event-name```
 
 ## caution
 
