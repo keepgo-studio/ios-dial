@@ -1,4 +1,0 @@
-class PickerCore extends HTMLElement {
-
-}
-
