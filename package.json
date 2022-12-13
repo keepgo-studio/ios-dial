@@ -1,15 +1,18 @@
 {
   "name": "ios-ui",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "ios ui style web component, based on Web Component technologies",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
-    "dist/*"
+    "dist/*",
+    "assets/*"
   ],
   "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "build-watch": "webpack --config webpack.config.js --watch"
+    "webpack": "webpack --config webpack.config.js",
+    "webpack-watch": "webpack --config webpack.config.js --watch",
+    "tsc": "tsc",
+    "build": "npm run tsc && npm run webpack"
   },
   "repository": {
     "type": "git",
@@ -28,6 +31,7 @@
   "homepage": "https://github.com/keepgo-studio/ios-ui#readme",
   "devDependencies": {
     "@types/webpack": "^5.28.0",
+    "copy-webpack-plugin": "^11.0.0",
     "file-loader": "^6.2.0",
     "terser-webpack-plugin": "^5.3.6",
     "ts-loader": "^9.4.2",
