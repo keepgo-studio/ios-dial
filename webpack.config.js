@@ -2,6 +2,7 @@ const path = require("path");
 
 const { TsconfigPathsPlugin } = require("tsconfig-paths-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
 
 const tsconfigPath = path.join(__dirname, "tsconfig.json");
 
@@ -34,7 +35,7 @@ module.exports = {
   },
 
   output: {
-    path: path.resolve(__dirname, "./dist"),
+    path: path.resolve(__dirname, "./dist/es"),
     filename: "[name].js",
     globalObject: "this",
     library: "UI",
@@ -62,4 +63,15 @@ module.exports = {
       }),
     ],
   },
+
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, "./assets"),
+          to: path.resolve(__dirname, "./dist"),
+        },
+      ],
+    }),
+  ],
 };
