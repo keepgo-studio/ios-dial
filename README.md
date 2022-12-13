@@ -48,16 +48,16 @@ This package has several custom elements which are follow Web Component rules.
 ### cdn
 
 ```html
-  <script src="https://unpkg.com/ios-ui/dist/es/bundle.js"></script>
+  <script src="https://unpkg.com/ios-ui/dist/bundle.js"></script>
 
   <!-- or -->
 
-  <script src="https://unpkg.com/ios-ui/dist/es/bundle.min.js"></script>
+  <script src="https://unpkg.com/ios-ui/dist/bundle.min.js"></script>
 
   <!-- if you only want to get one ui component -->
   <!-- This file hasn't set yet. 😥 But it will support ASAP -->
 
-  <script src="https://unpkg.com/iou-ui/dist/es/picker.js">
+  <script src="https://unpkg.com/iou-ui/dist/picker.js">
 ```
 
 # Ui types
