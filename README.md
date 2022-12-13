@@ -1,3 +1,19 @@
+- [ios-ui](#ios-ui)
+  * [Todos](#todos)
+  * [installetion](#installetion)
+    + [npm](#npm)
+    + [cdn](#cdn)
+- [Ui types](#ui-types)
+  * [1. Picker](#1-picker)
+    + [user parameters](#user-parameters)
+    + [caution](#caution)
+    + [guide](#guide)
+    + [examples](#examples)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
+
+
 # ios-ui
 
 This package has several custom elements which are follow Web Component rules.
@@ -21,7 +37,7 @@ This package has several custom elements which are follow Web Component rules.
 8. Support typescript (O)
 
 
-## Usage
+## installetion
 
 ### npm
 
@@ -96,12 +112,12 @@ This package has several custom elements which are follow Web Component rules.
   * if true, picker will make sound
   * example: ```sound="true"```
 
-## caution
+### caution
 
 * All parameters are should be a **string** since the custom component get these params by Element.getAttributes() function.
 
 
-## guide
+### guide
 1. In browser
 
 ```js
@@ -133,7 +149,7 @@ Picker.config('picker');
   <web-picker></web-picker>
   ```
 
-## examples
+### examples
 
 ```html
 <ios-ui-picker
