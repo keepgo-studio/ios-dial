@@ -1,18 +1,24 @@
 # ios-ui
 
-1. width, height, acc attr 추가 (O)
+This package has several custom elements which are follow Web Component rules.
 
-2. endless style 구현
+## Todos
 
-3. scroll event 구현 (O)
+1. Adding width, height, acc attributes (O)
 
-4. giving opportunity nameing for the event to user (O)
+2. Implement endless style (O)
 
-5. keydown event 구현 (O)
+3. Implement scroll event (O)
 
-6. bouncing animation (O)
+4. Implement giving opportunity nameing for the event to user (O)
 
-7. npm 배포
+5. Implement keydown event (O)
+
+6. Implement bouncing animation (O)
+
+7. Deploy npm (O)
+
+8. Support typescript (O)
 
 
 ## Usage
@@ -26,81 +32,108 @@
 ### cdn
 
 ```html
-  <script src="https://unpkg.com/iou-ui">
+  <script src="https://unpkg.com/ios-ui/dist/es/bundle.js"></script>
+
+  <!-- or -->
+
+  <script src="https://unpkg.com/ios-ui/dist/es/bundle.min.js"></script>
 
   <!-- if you only want to get one ui component -->
+  <!-- This file hasn't set yet. 😥 But it will support ASAP -->
 
-  <script src="https://unpkg.com/iou-ui/dist/picker.production.min.js">
+  <script src="https://unpkg.com/iou-ui/dist/es/picker.js">
 ```
 
 # Ui types
 
-## Picker
+## 1. Picker
 
 ### user parameters
 
-- width
+- width (default: '100%')
+  
+  * width of the component
   * example : ```width='100%'```
 
-- height
+- height: (default: '100%')
+
+  * height of the component. 
   * example : ```height='100%'```
 
-- num-list
+- num-list (default: [10])
+
+  * insert number many as you want.
   * example : ```num-list="24,60,60"```
 
-- title-list
+- title-list (default: [])
+
   * example : ```title-list="시간,분,초"```
 
-- picker-type
+- picker-type (default: ["end"])
+
   * example : ```picker-type="end"```
 
-- flexible
+- flexible (default: false)
+
+  * if true, picker size will change if window resized
   * example : ```flexible="true"```
 
-- allow-key-event
+- allow-key-event (default: false)
+
+  * if true, user can choose number by pressing keyboard
   * example : ```allow-key-event="false"```
 
-- event-name
-  * example : ```event-name```
+- event-name (default: setnumber)
+
+  * the component fire its result numbers by Element.dispatchEvent() and its event name is 'setnumber' as default.
+
+    if you want to change it, insert to this parameter
+
+  * example : ```event-name='result'```
+
+- sound (default: true)
+
+  * if true, picker will make sound
+  * example: ```sound="true"```
 
 ## caution
 
-* all parameters should typed with string since this module created pure html and javscript.
-
-* Width and height is recommended to default, "100%"
+* All parameters are should be a **string** since the custom component get these params by Element.getAttributes() function.
 
 
-## getting result
-
-event name : set
-
-## example
-
-1. Firstly, define component somewhere of your code
+## guide
+1. In browser
 
 ```js
-import App from "ios-ui/picker";
-
-new App().config("picker");
+UI.Picker.config('picker')
 ```
 
-2. Then, you can add it to your code freely!
-
-```html
-<ios-ui-picker></ios-ui-picker>
-```
-
-if you turn of flag in option, you can define component with only your tag name
+2. In node environment
 
 ```js
-new App().config("web-picker", { flag: false });
+import { Picker } from 'ios-ui';
+
+// put this line somewhere in your codes
+Picker.config('picker');
+
+// and use it like using custom web component
+
+  <div>
+    <ios-ui-picker></ios-ui-picker>
+  </div>
 ```
 
-```html
-<web-picker></web-picker>
-```
+  * if you turn off flag in option, you can define component with only your tag name
 
-3. You can add settings inside the tag
+  ```js
+  new App().config("web-picker", { flag: false });
+  ```
+  
+  ```html
+  <web-picker></web-picker>
+  ```
+
+## examples
 
 ```html
 <ios-ui-picker
@@ -114,9 +147,7 @@ new App().config("web-picker", { flag: false });
 ></ios-ui-picker>
 ```
 
-## attributes examples
-
-1. [event-name](#event-name)
+* [event-name](#event-name) example
 
 ```html
 <ios-ui-picker

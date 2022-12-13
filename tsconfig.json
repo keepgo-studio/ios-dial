@@ -7,11 +7,13 @@
 
       "sourceMap": true,
       "declaration": true,
+
       "esModuleInterop": true,
+      "isolatedModules": true,
+
       "forceConsistentCasingInFileNames": true,
       "strict": true,      
       "removeComments": true,
-
 
       "baseUrl": ".",
       "moduleResolution": "node",
@@ -24,6 +26,6 @@
         "src/@types"
       ]
     },
-    "include": ["src"],
+    "include": ["src", "webpack.config.js"],
     "exclude": ["node_modules", "dist"]
   }

@@ -112,7 +112,7 @@ const styles = `
  *     ↓
  * disconnectedCallback
  */
-export class Picker extends HTMLElement {
+export class PickerComponent extends HTMLElement {
   /**
    * @typedef {Object} UserSettings
    * @property {string} width
