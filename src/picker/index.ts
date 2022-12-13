@@ -1,6 +1,8 @@
 // @ts-check
-import { IPHONE_PPI_WIDTH, MAX_FONT_SIZE, errorHTML } from "./ios.js";
-import { range } from "./utils.js";
+import { IPHONE_PPI_WIDTH, MAX_FONT_SIZE, errorHTML } from "./ios";
+import { range } from "@src/utils";
+
+import TickMp3 from '@assets/ios-tik.mp3';
 
 const styles = `
   /* reset css */
@@ -127,7 +129,7 @@ export class Picker extends HTMLElement {
   /**
    * @type {UserSettings}
    */
-  userSettings = {
+  userSettings: UserSettings = {
     width: "100%",
     height: "100%",
     "num-list": [10],
@@ -141,7 +143,7 @@ export class Picker extends HTMLElement {
   };
 
   /**
-   * @typedef {Object} ElementList
+   * @typedef {Object} ElementMap
    * @property {HTMLElement} root
    * @property {HTMLElement} pickerContainer
    * @property {HTMLElement} center
@@ -150,10 +152,10 @@ export class Picker extends HTMLElement {
    * @property {Array<HTMLElement>} allLi
    */
   /**
-   * @type {ElementList}
+   * @type {ElementMap}
    */
   // @ts-ignore
-  elems = {};
+  elems: ElementMap = {};
 
   /**
    * @typedef {Object} Info
@@ -166,7 +168,7 @@ export class Picker extends HTMLElement {
    * @description the array initialize at {@link syncCoor}
    *  ,and {@link Info} data will be changed at ${@link setObservers}
    */
-  allNumsCoorPerPicker = [];
+  allNumsCoorPerPicker: Array<Array<Info>> = [];
 
   /**
    * @typedef {Object} CoorInfo
@@ -180,18 +182,18 @@ export class Picker extends HTMLElement {
   /**
    * @type {Array<CoorInfo>}
    */
-  pickerCoor = [];
+  pickerCoor: Array<CoorInfo> = [];
 
   /**
    * @type {DOMRect}
    * @description the variable assigned at {@link syncCoor}
    */
-  pickerContainerCoor;
+  pickerContainerCoor?: DOMRect;
 
   /**
    * @type {{ mousedownY: number, pressedPickerIdx: number}}
    */
-  mouseCoor = {
+  mouseCoor: { mousedownY: number; pressedPickerIdx: number } = {
     mousedownY: -1,
     pressedPickerIdx: -1,
   };
@@ -202,7 +204,13 @@ export class Picker extends HTMLElement {
    *  ,and you can find assigning value cods for '{@link main.result}' at {@link setObservers} and
    *  can find initializing codes at {@link syncAttributes}
    */
-  main = {
+  main: {
+    cnt: number;
+    shouldFireResult: boolean;
+    result: Array<number>;
+    bounceLength: number;
+    animating: boolean;
+  } = {
     cnt: 0,
     shouldFireResult: false,
     result: [],
@@ -215,13 +223,12 @@ export class Picker extends HTMLElement {
    * @description float number that help js won't calculate too deeply from {@link drawPicker}
    *  which has {@link reqestAnimationFrame}
    */
-  animFloat = 0.1;
+  animFloat: number = 0.1;
 
   /**
-   *
    * @returns {{ canRun: boolean, msg?: string }}
    */
-  syncAttributes() {
+  syncAttributes(): { canRun: boolean; msg?: unknown } {
     const userWidth = this.getAttribute("width");
     const userHeight = this.getAttribute("height");
     const userAcc = this.getAttribute("acc");
@@ -276,10 +283,11 @@ export class Picker extends HTMLElement {
 
       if (userPickerType) {
         /**
-         * @param {string} v 
+         * @param {string} v
          * @returns {boolean}
          */
-        const checkValid = (v) => v === "end" || v === "endless";
+        const checkValid = (v: string): boolean =>
+          v === "end" || v === "endless";
 
         const typeList = userPickerType.split(",");
 
@@ -299,8 +307,13 @@ export class Picker extends HTMLElement {
         if (this.userSettings["picker-type-list"].length === 1) {
           const unified = this.userSettings["picker-type-list"][0];
 
-          this.userSettings["picker-type-list"] = this.userSettings["num-list"].map(() => unified)
-        } else if (this.userSettings["picker-type-list"].length < this.userSettings["num-list"].length) {
+          this.userSettings["picker-type-list"] = this.userSettings[
+            "num-list"
+          ].map(() => unified);
+        } else if (
+          this.userSettings["picker-type-list"].length <
+          this.userSettings["num-list"].length
+        ) {
           throw new Error(
             `picker-type-list lenght should correspond with num-list or just only one value\n
             (e.g picker-type-list=\"end,end,end\" | picker-type-list=\"end\")
@@ -341,11 +354,10 @@ export class Picker extends HTMLElement {
     return { canRun: true };
   }
   /**
-   *
    * @param {Element} pickerElem
    * @param {number} pickerIdx
    */
-  drawPicker(pickerElem, pickerIdx) {
+  drawPicker(pickerElem: Element, pickerIdx: number) {
     const coor = this.pickerCoor[pickerIdx];
     const dis = Math.abs(coor.dest - coor.y);
     const d = dis > 2 ? dis * this.userSettings.acc : dis;
@@ -405,7 +417,10 @@ export class Picker extends HTMLElement {
    * @param {number} pickerIdx
    * @param {number} numIdx
    */
-  drawNum(numElem, pickerIdx, numIdx) {
+  drawNum(numElem: Element, pickerIdx: number, numIdx: number) {
+    if (this.pickerContainerCoor === undefined) {
+      throw new Error("something wrong in browser");
+    }
     const span = numElem.children[0];
 
     if (this.allNumsCoorPerPicker[pickerIdx][numIdx].isEntered) {
@@ -476,7 +491,7 @@ export class Picker extends HTMLElement {
    * @param {CoorInfo} coor
    * @param {number} pickerIdx
    */
-  setIdealDestWhenStop(coor, pickerIdx) {
+  setIdealDestWhenStop(coor: CoorInfo, pickerIdx: number) {
     if (this.main.animating) return;
 
     /**
@@ -499,7 +514,7 @@ export class Picker extends HTMLElement {
 
     this.isDrawingStop();
 
-    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+    this.elems.allPickers.forEach((pickerElem: Element, pickerIdx: number) => {
       const coor = this.pickerCoor[pickerIdx];
 
       // if mousedown maintating, the picker won't go back to ideal automatically
@@ -554,7 +569,7 @@ export class Picker extends HTMLElement {
      * @param {number} baseNumIdx
      * @returns {string}
      */
-    const cloneNodesHTML = (pickerIdx, baseNumIdx) =>
+    const cloneNodesHTML = (pickerIdx: number, baseNumIdx: number): string =>
       this.userSettings["picker-type-list"][pickerIdx] === "end"
         ? ""
         : range(this.userSettings["num-list"][pickerIdx])
@@ -679,7 +694,7 @@ export class Picker extends HTMLElement {
     // @ts-ignore
     const spaceHeight = this.elems.space.offsetHeight;
 
-    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+    this.elems.allPickers.forEach((pickerElem: Element, pickerIdx: number) => {
       this.allNumsCoorPerPicker.push([]);
 
       // if picker-type === 'endless', the list contains 'num-clone' class
@@ -739,13 +754,13 @@ export class Picker extends HTMLElement {
   /**
    * @type {Array<IntersectionObserver>}
    */
-  ioForSetIdealDest = [];
+  ioForSetIdealDest: Array<IntersectionObserver> = [];
 
   /**
    * @type {Array<IntersectionObserver>}
    * @description using only for **endless** picker style
    */
-  ioScrollSwitcherPerPicker = [];
+  ioScrollSwitcherPerPicker: Array<IntersectionObserver> = [];
 
   setObservers() {
     this.ioForCurvingNums.disconnect();
@@ -775,7 +790,9 @@ export class Picker extends HTMLElement {
       }
     );
 
-    this.elems.allLi.forEach((elem) => this.ioForCurvingNums.observe(elem));
+    this.elems.allLi.forEach((elem: Element) =>
+      this.ioForCurvingNums.observe(elem)
+    );
 
     /**
      * Since center is **absolute positioned element**, its offsetTop is not accurate
@@ -809,7 +826,7 @@ export class Picker extends HTMLElement {
 
                 try {
                   if (this.userSettings.sound) {
-                    new Audio("../assets/ios-tik.mp3").play();
+                    new Audio(TickMp3).play();
                   }
                 } catch (err) {
                   console.log(err);
@@ -826,10 +843,10 @@ export class Picker extends HTMLElement {
 
       pickerElem
         .querySelectorAll("li")
-        .forEach((e) => this.ioForSetIdealDest[pickerIdx].observe(e));
+        .forEach((e: Element) => this.ioForSetIdealDest[pickerIdx].observe(e));
     });
 
-    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+    this.elems.allPickers.forEach((pickerElem: Element, pickerIdx: number) => {
       if (this.userSettings["picker-type-list"][pickerIdx] === "end") return;
 
       const spaceHeight = this.elems.space.offsetHeight;
@@ -890,7 +907,11 @@ export class Picker extends HTMLElement {
    * @param {number} dis
    * @param {'add' | 'sub'} method
    */
-  addDistanceForDestination(pickerIdx, dis, method) {
+  addDistanceForDestination(
+    pickerIdx: number,
+    dis: number,
+    method: "add" | "sub"
+  ) {
     const BOUNCE_LENGTH = this.elems.root.offsetHeight / 3;
 
     const coor = this.pickerCoor[pickerIdx];
@@ -928,7 +949,7 @@ export class Picker extends HTMLElement {
     /**
      * @param {KeyboardEvent} e
      */
-    keydown: (e) => {
+    keydown: (e: KeyboardEvent) => {
       if (this.focusedPickerIdx === -1) {
         switch (e.code) {
           case "ArrowUp":
@@ -969,7 +990,7 @@ export class Picker extends HTMLElement {
    * this listener is for key board event, check {@link keyListener}
    */
   attachFocusEventListenerForPicker() {
-    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+    this.elems.allPickers.forEach((pickerElem: Element, pickerIdx: number) => {
       pickerElem.addEventListener("focusin", () => {
         this.focusedPickerIdx = pickerIdx;
       });
@@ -984,7 +1005,7 @@ export class Picker extends HTMLElement {
     /**
      * @param {MouseEvent} e
      */
-    mousedown: (e) => {
+    mousedown: (e: MouseEvent) => {
       const target = e.composedPath().find((elem) => {
         // @ts-ignore
         if (!elem.tagName) return false;
@@ -1003,7 +1024,7 @@ export class Picker extends HTMLElement {
     /**
      * @param {MouseEvent} e
      */
-    mousemove: (e) => {
+    mousemove: (e: MouseEvent) => {
       if (this.mouseCoor.mousedownY === -1) return;
 
       const dir = e.y - this.mouseCoor.mousedownY;
@@ -1042,7 +1063,7 @@ export class Picker extends HTMLElement {
    * @param {number} pickerIdx
    * @param {number} dis
    */
-  wheelListener(e, pickerIdx, dis) {
+  wheelListener(e: WheelEvent, pickerIdx: number, dis: number) {
     this.addDistanceForDestination(
       pickerIdx,
       dis,
@@ -1051,7 +1072,7 @@ export class Picker extends HTMLElement {
   }
 
   attachWheelEventListenerForPicker() {
-    this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
+    this.elems.allPickers.forEach((pickerElem: Element, pickerIdx: number) => {
       const numGap = this.pickerCoor[pickerIdx].numGap;
 
       pickerElem.addEventListener(
@@ -1070,7 +1091,7 @@ export class Picker extends HTMLElement {
 
     this.isResizing = false;
   }
-  resizeStId = -1;
+  resizeStId: any;
   isResizing = false;
 
   async resizeListener() {
@@ -1090,7 +1111,9 @@ export class Picker extends HTMLElement {
 
     // mouse events for window
     Object.keys(this.mouseListener).forEach((event) => {
-      window.addEventListener(event, this.mouseListener[event].bind(this));
+      const listener = this.mouseListener[event as TMouseListener];
+
+      window.addEventListener(event as TMouseListener, listener.bind(this));
     });
     document.onmouseleave = this.mouseListener.mouseleave;
 
@@ -1099,7 +1122,9 @@ export class Picker extends HTMLElement {
       this.attachFocusEventListenerForPicker();
 
       Object.keys(this.keyListener).forEach((event) => {
-        window.addEventListener(event, this.keyListener[event].bind(this));
+        const listener = this.keyListener[event as TKeyListener];
+
+        window.addEventListener(event as TKeyListener, listener.bind(this));
       }, false);
     }
 
@@ -1111,7 +1136,7 @@ export class Picker extends HTMLElement {
      * disable darg and if some picker had focused, will be disappear if user click other area
      */
     this.elems.root.onmousedown = () => {
-      this.elems.allPickers.forEach((e) => e.blur());
+      this.elems.allPickers.forEach((e: HTMLElement) => e.blur());
 
       return false;
     };
@@ -1119,13 +1144,19 @@ export class Picker extends HTMLElement {
 
   disconnectedCallback() {
     Object.keys(this.mouseListener).forEach((event) => {
-      window.removeEventListener(event, this.mouseListener[event].bind(this));
+      window.removeEventListener(
+        event as TMouseListener,
+        this.mouseListener[event as TMouseListener].bind(this)
+      );
     });
     document.removeEventListener("mouseleave", this.mouseListener.mouseleave);
 
     if (this.userSettings["allow-key-event"]) {
       Object.keys(this.keyListener).forEach((event) => {
-        window.removeEventListener(event, this.keyListener[event].bind(this));
+        window.removeEventListener(
+          event as TKeyListener,
+          this.keyListener[event as TKeyListener].bind(this)
+        );
       });
     }
 

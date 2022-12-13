@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+      "rootDir": "src",
+      "target": "ES6", 
+      "module": "ES6",
+      "outDir": "dist",
+
+      "sourceMap": true,
+      "declaration": true,
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true,
+      "strict": true,      
+      "removeComments": true,
+
+
+      "baseUrl": ".",
+      "moduleResolution": "node",
+      "paths": {
+        "@src/*": ["src/*"],
+        "@assets/*": ["assets/*"]
+      },
+      "typeRoots": [
+        "node_modules/@types",
+        "src/@types"
+      ]
+    },
+    "include": ["src"],
+    "exclude": ["node_modules", "dist"]
+  }

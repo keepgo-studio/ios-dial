@@ -1,5 +1,7 @@
-*.html
-
 .vscode
 
-test.js
+dist
+
+node_modules
+
+index.html

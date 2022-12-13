@@ -2,12 +2,11 @@ export const IPHONE_PPI_WIDTH = 270.719
 
 export const MAX_FONT_SIZE = 80
 
-
 /**
  * @param {string} err 
  * @returns {string} html
  */
-export const errorHTML = (err) => `
+export const errorHTML = (err: string): string => `
   <div style="
     background-color: #000;
     text-align: center;
