@@ -64,6 +64,15 @@ This package has several custom elements which are follow Web Component rules.
 
 ## 1. Picker
 
+<div style="display:flex">
+ <img src="https://user-images.githubusercontent.com/101318878/207603762-5624e942-f2cc-4e82-bf90-e7dec4cd8d80.png" style="width:300px; display: inline-block">
+
+ <p>
+  <img style="width: 300px" src="https://user-images.githubusercontent.com/101318878/207604508-8caed4ec-ac52-4526-9ee6-25015ad527d5.png"><em>electron app, Ios-clock, example snapshot</em>
+ </p>
+</div>
+
+
 ### user parameters
 
 - width (default: '100%')
@@ -116,7 +125,7 @@ This package has several custom elements which are follow Web Component rules.
 
   * example : ```event-name='result'```
 
-- sound-src (default: true)
+- sound-src (default: "https://unpkg.com/ios-ui/dist/bundle.js")
 
   * if true, picker will make sound
   * example: ```sound-src="/public/mp3/example.mp3""```
@@ -151,7 +160,7 @@ Picker.config('picker');
   * if you turn off flag in option, you can define component with only your tag name
 
   ```js
-  new App().config("web-picker", { flag: false });
+  new Picker().config("web-picker", { flag: false });
   ```
   
   ```html
