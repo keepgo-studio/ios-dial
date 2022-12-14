@@ -26,16 +26,11 @@ module.exports = {
           configFile: tsconfigPath,
         },
       },
-
-      {
-        test: /.mp3$/,
-        loader: "file-loader",
-      },
     ],
   },
 
   output: {
-    path: path.resolve(__dirname, "./dist/es"),
+    path: path.resolve(__dirname, "./dist"),
     filename: "[name].js",
     globalObject: "this",
     library: "UI",

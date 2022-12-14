@@ -2,7 +2,6 @@
 import { IPHONE_PPI_WIDTH, MAX_FONT_SIZE, errorHTML } from "./ios";
 import { range } from "@src/utils";
 
-import TickMp3 from '@assets/ios-tik.mp3';
 
 const styles = `
   /* reset css */
@@ -138,7 +137,7 @@ export class PickerComponent extends HTMLElement {
     flexible: false,
     acc: 0.18,
     "allow-key-event": false,
-    sound: true,
+    "sound-src": "https://unpkg.com/ios-ui/dist/ios-tik.mp3",
     "event-name": "setnumber",
   };
 
@@ -237,7 +236,7 @@ export class PickerComponent extends HTMLElement {
     const userFlexible = this.getAttribute("flexible");
     const userPickerType = this.getAttribute("picker-type-list");
     const userAllowKeyEvent = this.getAttribute("allow-key-event");
-    const userSound = this.getAttribute("sound");
+    const userSoundSrc = this.getAttribute("sound-src");
     const userEventName = this.getAttribute("event-name");
 
     try {
@@ -266,9 +265,6 @@ export class PickerComponent extends HTMLElement {
 
           return n;
         });
-
-        this.main.cnt = this.userSettings["num-list"].length;
-        this.main.result = range(this.main.cnt).map(() => 0);
       }
 
       if (userTitleList) {
@@ -303,53 +299,58 @@ export class PickerComponent extends HTMLElement {
 
           return type;
         });
-
-        if (this.userSettings["picker-type-list"].length === 1) {
-          const unified = this.userSettings["picker-type-list"][0];
-
-          this.userSettings["picker-type-list"] = this.userSettings[
-            "num-list"
-          ].map(() => unified);
-        } else if (
-          this.userSettings["picker-type-list"].length <
-          this.userSettings["num-list"].length
-        ) {
-          throw new Error(
-            `picker-type-list lenght should correspond with num-list or just only one value\n
-            (e.g picker-type-list=\"end,end,end\" | picker-type-list=\"end\")
-            `
-          );
-        }
       }
 
       if (userAllowKeyEvent) {
         this.userSettings["allow-key-event"] = userAllowKeyEvent === "true";
       }
 
-      if (userSound) {
-        this.userSettings.sound = userSound === "true";
+      if (userSoundSrc) {
+        this.userSettings["sound-src"] = userSoundSrc;
       }
 
       if (userEventName) {
         this.userSettings["event-name"] = userEventName;
       }
 
-      if (
-        this.userSettings["num-list"].length <
-        this.userSettings["title-list"].length
-      ) {
-        throw new Error("titles cannot be more exists than numbers");
-      } else {
-        while (
-          this.userSettings["num-list"].length >
-          this.userSettings["title-list"].length
-        ) {
-          this.userSettings["title-list"].push("");
-        }
-      }
     } catch (error) {
       return { canRun: false, msg: error };
     }
+    
+
+    if (
+      this.userSettings["num-list"].length <
+      this.userSettings["title-list"].length
+    ) {
+      throw new Error("titles cannot be more exists than numbers");
+    } else {
+      while (
+        this.userSettings["num-list"].length >
+        this.userSettings["title-list"].length
+      ) {
+        this.userSettings["title-list"].push("");
+      }
+    }
+
+    if (this.userSettings["picker-type-list"].length === 1) {
+      const unified = this.userSettings["picker-type-list"][0];
+
+      this.userSettings["picker-type-list"] = this.userSettings[
+        "num-list"
+      ].map(() => unified);
+    } else if (
+      this.userSettings["picker-type-list"].length <
+      this.userSettings["num-list"].length
+    ) {
+      throw new Error(
+        `picker-type-list lenght should correspond with num-list or just only one value\n
+        (e.g picker-type-list=\"end,end,end\" | picker-type-list=\"end\")
+        `
+      );
+    }
+
+    this.main.cnt = this.userSettings["num-list"].length;
+    this.main.result = range(this.main.cnt).map(() => 0);
 
     return { canRun: true };
   }
@@ -825,8 +826,8 @@ export class PickerComponent extends HTMLElement {
                 this.main.result[pickerIdx] = numIdx % len;
 
                 try {
-                  if (this.userSettings.sound) {
-                    new Audio(TickMp3).play();
+                  if (this.userSettings["sound-src"]) {
+                    new Audio(this.userSettings["sound-src"]).play();
                   }
                 } catch (err) {
                   console.log(err);
@@ -1064,9 +1065,10 @@ export class PickerComponent extends HTMLElement {
    * @param {number} dis
    */
   wheelListener(e: WheelEvent, pickerIdx: number, dis: number) {
+    const y = Math.abs(e.deltaY);
     this.addDistanceForDestination(
       pickerIdx,
-      dis,
+      y > dis ? dis : y,
       e.deltaY > 0 ? "add" : "sub"
     );
   }
@@ -1079,7 +1081,7 @@ export class PickerComponent extends HTMLElement {
         "wheel",
         // @ts-ignore
         (e) => this.wheelListener(e, pickerIdx, numGap),
-        { passive: false }
+        { passive: true }
       );
     });
   }

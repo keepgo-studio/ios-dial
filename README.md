@@ -48,16 +48,16 @@ This package has several custom elements which are follow Web Component rules.
 ### cdn
 
 ```html
-  <script src="https://unpkg.com/ios-ui/dist/es/bundle.js"></script>
+  <script src="https://unpkg.com/ios-ui/dist/bundle.js"></script>
 
   <!-- or -->
 
-  <script src="https://unpkg.com/ios-ui/dist/es/bundle.min.js"></script>
+  <script src="https://unpkg.com/ios-ui/dist/bundle.min.js"></script>
 
   <!-- if you only want to get one ui component -->
   <!-- This file hasn't set yet. 😥 But it will support ASAP -->
 
-  <script src="https://unpkg.com/iou-ui/dist/es/picker.js">
+  <script src="https://unpkg.com/iou-ui/dist/picker.js">
 ```
 
 # Ui types
@@ -85,9 +85,18 @@ This package has several custom elements which are follow Web Component rules.
 
   * example : ```title-list="시간,분,초"```
 
-- picker-type (default: ["end"])
+- picker-type-list (default: "end")
 
-  * example : ```picker-type="end"```
+  * define each picker's style ('end' | 'endless')
+  * example : ```picker-type-list="end,end,end"```
+
+    if you define style only one, then it will unify all pickers
+    ```html
+      <ios-ui-picker
+        num-list="24,60,60"  
+        picker-type-list="end"
+      ></ios-ui-picker>
+    ```
 
 - flexible (default: false)
 
@@ -107,10 +116,10 @@ This package has several custom elements which are follow Web Component rules.
 
   * example : ```event-name='result'```
 
-- sound (default: true)
+- sound-src (default: true)
 
   * if true, picker will make sound
-  * example: ```sound="true"```
+  * example: ```sound-src="/public/mp3/example.mp3""```
 
 ### caution
 
@@ -157,7 +166,7 @@ Picker.config('picker');
   height="400px"
   num-list="10"
   title-list="hour"
-  picker-type="end"
+  picker-type-list="end"
   flexible="true"
   allow-key-event="false"
 ></ios-ui-picker>
@@ -175,6 +184,6 @@ Picker.config('picker');
   /**
    * @param {CustomEvent<Array<number>>} e
    */
-  element.addEventListener('setnumber', ({detail}) => console.log(detail));
+  element.addEventListener('getnumber', ({detail}) => console.log(detail));
   // if num-list length is 3 -> [0, 0, 0]
 ```

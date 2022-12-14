@@ -21,7 +21,7 @@ interface UserSettings {
   flexible: boolean;
   acc: number;
   "allow-key-event": boolean;
-  sound: boolean;
+  "sound-src": string;
   "event-name": string;
 }
 
