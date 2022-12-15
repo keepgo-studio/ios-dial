@@ -1,6 +1,6 @@
 {
   "name": "ios-ui",
-  "version": "1.2.9",
+  "version": "1.2.11",
   "description": "ios ui style web component, based on Web Component technologies",
   "main": "dist/bundle.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/keepgo-studio/ios-ui.git"
+    "url": "https://github.com/keepgo-studio/ios-ui.git"
   },
   "keywords": [
     "javascript",
@@ -29,7 +29,6 @@
   "devDependencies": {
     "@types/webpack": "^5.28.0",
     "copy-webpack-plugin": "^11.0.0",
-    "file-loader": "^6.2.0",
     "terser-webpack-plugin": "^5.3.6",
     "ts-loader": "^9.4.2",
     "tsconfig-paths": "^4.1.1",
