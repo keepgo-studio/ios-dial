@@ -54,10 +54,10 @@ This package has several custom elements which are follow Web Component rules.
 
   <script src="https://unpkg.com/ios-ui/dist/bundle.min.js"></script>
 
+
+  <!-- <script src="https://unpkg.com/iou-ui/dist/picker.js"> -->
   <!-- if you only want to get one ui component -->
   <!-- This file hasn't set yet. 😥 But it will support ASAP -->
-
-  <script src="https://unpkg.com/iou-ui/dist/picker.js">
 ```
 
 # Ui types
@@ -139,10 +139,31 @@ This package has several custom elements which are follow Web Component rules.
 1. In browser
 
 ```js
-UI.Picker.config('picker')
+<!DOCTYPE html>
+
+<html>
+  <style>
+      body {
+          background-color: rgb(255, 255, 255);
+          overflow: hidden;
+          width: 100vw;
+          height: 100vh;
+      }
+  </style>
+// ...
+
+  <body>
+    <ios-ui-picker num-list="24,60,60" picker-type-list="end"></ios-ui-picker>
+    <script src="./dist/bundle.js"></script>
+
+    <script>
+        UI.Picker.config('picker')
+    </script>
+  </body>
+</html>
 ```
 
-2. In node environment
+2. In webpack(or other bundle tools) environment
 
 ```js
 import { Picker } from 'ios-ui';
