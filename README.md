@@ -181,7 +181,7 @@ Picker.config('picker');
   * if you turn off flag in option, you can define component with only your tag name
 
   ```js
-  Picker.config("web-picker", { flag: false });
+  UI.Picker.config("web-picker", { flag: false });
   ```
   
   ```html
