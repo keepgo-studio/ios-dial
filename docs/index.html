@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: rgb(11, 11, 11);
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .code {
+      margin: 3rem 0;
+      border-radius: 15px;
+      background-color: rgb(59, 59, 59);
+    }
+
+  </style>
+  <title>ios-UI example page</title>
+</head>
+<body>
+
+  <h1 style="padding: 1.5rem; ">ios-UI examples</h1>
+
+  <div style="text-align: center; margin: 3rem;">
+    <h2>Ios clock UI</h2>
+  </div>
+
+  <section style="border:white 1px solid; margin: auto; min-width: 300px; max-width: 40vw; height: 500px; background-color: black;">
+    <web-picker
+    num-list="24, 60, 60"
+    title-list="시간,분,초"
+    picker-type-list="end"
+    flexible="true"
+    allow-key-event="true"
+    ></web-picker>
+  </section>
+  <div style="padding: 3rem">
+    <h3>codes</h3>
+
+    <pre class="code" id="picker-pre">
+    </pre>
+  </div>
+
+  <script src="https://unpkg.com/ios-ui/dist/bundle.js"></script>
+  <script>
+    UI.Picker.config("web-picker", { flag: false });
+
+    document.getElementById('picker-pre').textContent = `
+      <web-picker
+        num-list="24, 60, 60"
+        title-list="시간,분,초"
+        picker-type-list="end"
+        flexible="true"
+        allow-key-event="true"
+      ></web-picker>
+
+      // ... in script
+      
+      UI.Picker.config("web-picker", { flag: false });
+    `;
+
+  </script>
+</body>
+</html>
