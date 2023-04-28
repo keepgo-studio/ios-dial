@@ -1,6 +1,7 @@
 // @ts-check
 import { IPHONE_PPI_WIDTH, MAX_FONT_SIZE, errorHTML } from "./ios";
 import { range } from "@src/utils";
+import Cache from "./cache";
 
 
 const styles = `
@@ -16,14 +17,15 @@ const styles = `
   }
 
   #root {
-    background-color: #000;
+    background-color: transparent;
+    color: #fff;
+    mix-blend-mode: difference;
 
     padding: 0 20px;
   }
 
   .picker-container {
     position: relative;
-    color: #fff;
     width: 100%;
     height: 100%;
     display: flex;
@@ -122,7 +124,7 @@ export class PickerComponent extends HTMLElement {
    * @property {boolean} flexible
    * @property {number} acc
    * @property {boolean} allow-key-event
-   * @property {boolean} sound
+   * @property {boolean} sound-src
    * @property {string} event-name
    */
   /**
@@ -205,13 +207,12 @@ export class PickerComponent extends HTMLElement {
    */
   main: {
     cnt: number;
-    shouldFireResult: boolean;
     result: Array<number>;
     bounceLength: number;
     animating: boolean;
+    mp3?: string
   } = {
     cnt: 0,
-    shouldFireResult: false,
     result: [],
     bounceLength: 0,
     animating: false,
@@ -525,26 +526,14 @@ export class PickerComponent extends HTMLElement {
 
       this.drawPicker(pickerElem, pickerIdx);
     });
+  }
+  
+  async cacheSound() {
+    const binary = await Cache.cache(this.userSettings["sound-src"]);
 
-    if (this.main.animating || this.isResizing) {
-      this.main.shouldFireResult = false;
-      return;
-    }
+    if (!binary) return;
 
-    if (
-      !this.main.animating &&
-      this.isPickerLocateAtIdealDest() &&
-      !this.main.shouldFireResult
-    ) {
-      this.dispatchEvent(
-        new CustomEvent(this.userSettings["event-name"], {
-          detail: this.main.result,
-          bubbles: true,
-        })
-      );
-
-      this.main.shouldFireResult = true;
-    }
+    this.main.mp3 = URL.createObjectURL(new Blob([binary], { type: 'audio/mp3'} ))
   }
 
   constructor() {
@@ -557,7 +546,10 @@ export class PickerComponent extends HTMLElement {
     const { canRun, msg } = this.syncAttributes();
 
     // 3. start animation
-    if (canRun) requestAnimationFrame(this.animation.bind(this));
+    if (canRun) {
+      this.cacheSound();
+      requestAnimationFrame(this.animation.bind(this));
+    }
     // @ts-ignore
     else this.render = () => (this.shadowRoot.innerHTML = errorHTML(msg));
   }
@@ -804,6 +796,13 @@ export class PickerComponent extends HTMLElement {
     // @ts-ignore
     const spaceHeight = this.elems.space?.offsetHeight;
 
+    const fireResult = () => this.dispatchEvent(
+      new CustomEvent(this.userSettings["event-name"], {
+        detail: this.main.result,
+        bubbles: true,
+      })
+    );
+
     // @ts-ignore
     this.elems.allPickers.forEach((pickerElem, pickerIdx) => {
       this.ioForSetIdealDest.push(
@@ -827,7 +826,10 @@ export class PickerComponent extends HTMLElement {
 
                 try {
                   if (this.userSettings["sound-src"]) {
-                    new Audio(this.userSettings["sound-src"]).play();
+                    if (!this.main.mp3) return;
+                    
+                    new Audio(this.main.mp3).play();
+                    fireResult();
                   }
                 } catch (err) {
                   console.log(err);
