@@ -1,5 +1,4 @@
 - [ios-ui](#ios-ui)
-  * [Todos](#todos)
   * [installetion](#installetion)
     + [npm](#npm)
     + [cdn](#cdn)
@@ -12,33 +11,15 @@
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
+<a href="https://www.npmjs.com/package/ios-ui">npm link</a>
 
 ### demo page
 
 https://keepgo-studio.github.io/ios-ui/
 
-
 # ios-ui
 
 This package has several custom elements which are follow Web Component rules.
-
-## Todos
-
-1. Adding width, height, acc attributes (O)
-
-2. Implement endless style (O)
-
-3. Implement scroll event (O)
-
-4. Implement giving opportunity nameing for the event to user (O)
-
-5. Implement keydown event (O)
-
-6. Implement bouncing animation (O)
-
-7. Deploy npm (O)
-
-8. Support typescript (O)
 
 
 ## installetion
@@ -57,11 +38,6 @@ This package has several custom elements which are follow Web Component rules.
   <!-- or -->
 
   <script src="https://unpkg.com/ios-ui/dist/bundle.min.js"></script>
-
-
-  <!-- <script src="https://unpkg.com/iou-ui/dist/picker.js"> -->
-  <!-- if you only want to get one ui component -->
-  <!-- This file hasn't set yet. 😥 But it will support ASAP -->
 ```
 
 # Ui types
@@ -146,9 +122,10 @@ This package has several custom elements which are follow Web Component rules.
 <!DOCTYPE html>
 
 <html>
+  <script src="https://unpkg.com/ios-ui/dist/bundle.min.js"></script>
   <style>
       body {
-          background-color: rgb(255, 255, 255);
+          background-color: rgb(0, 0, 0);
           overflow: hidden;
           width: 100vw;
           height: 100vh;
@@ -158,7 +135,6 @@ This package has several custom elements which are follow Web Component rules.
 
   <body>
     <ios-ui-picker num-list="24,60,60" picker-type-list="end"></ios-ui-picker>
-    <script src="./dist/bundle.js"></script>
 
     <script>
         UI.Picker.config('picker')
