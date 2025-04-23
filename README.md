@@ -15,7 +15,7 @@
 
 ### demo page
 
-https://keepgo-studio.github.io/ios-ui/
+[demo](https://keepgo-studio.github.io/ios-dial/)
 
 # ios-ui
 
